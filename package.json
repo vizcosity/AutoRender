@@ -1,0 +1,19 @@
+{
+  "name": "autorender",
+  "version": "0.1.0",
+  "description": "After Effects auto-rendering application for SurfTheMusic",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vizcosity/AutoRender.git"
+  },
+  "author": "Aaron Baw",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vizcosity/AutoRender/issues"
+  },
+  "homepage": "https://github.com/vizcosity/AutoRender#readme"
+}
