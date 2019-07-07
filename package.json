@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/vizcosity/AutoRender/issues"
   },
-  "homepage": "https://github.com/vizcosity/AutoRender#readme"
+  "homepage": "https://github.com/vizcosity/AutoRender#readme",
+  "dependencies": {
+    "@nexrender/core": "^1.5.0"
+  }
 }
