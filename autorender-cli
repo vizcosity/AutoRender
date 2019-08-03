@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+const cli = require('cli');
+
+var args = cli.parse({
+    background: ['b', 'Template background image', 'file', false],
+    artwork: ['a', 'Song artwork image', 'file', false],
+    song: ['s', 'Song audio file', 'file', false],
+});
+
+if (!args.song) return cli.error("Song file is required.");

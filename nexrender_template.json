@@ -1,0 +1,26 @@
+{
+  "template": {
+    "composition": "Render 1080p [Change length]",
+    "src": "DECLARE AE_TEMPLATE_PATH IN opts.env FILE"
+  },
+  "assets": {
+    "type": "script",
+    "src": "DECLARE AE_AUTORENDER_SCRIPT IN opts.env FILE"
+  },
+  "actions": {
+        "postrender": [
+            {
+                "module": "@nexrender/action-encode",
+                "output": "/Users/aaronbaw/Desktop/autorender_test.mp4",
+                "preset": "mp4",
+                "params": {
+                    "-acodec": "aac",
+                    "-ab": "128k",
+                    "-ar": "44100",
+                    "-vcodec": "libx264",
+                    "-r": "29.97"
+                }
+            }
+        ]
+    }
+}
