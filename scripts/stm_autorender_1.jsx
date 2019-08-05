@@ -27,7 +27,7 @@ var genre = 'Genre';
 var visualizerColour = '#6C7379';
 
 // START: Change Song & Artist Name
-var changeSongTitleComp = app.project.item(6);
+var changeSongTitleComp = app.project.item(5);
 var artistNameLayer = changeSongTitleComp.layer(4);
 var songNameLayer = changeSongTitleComp.layer(5);
 artistNameLayer.property("Source Text").setValue(artistName);
@@ -35,20 +35,20 @@ songNameLayer.property("Source Text").setValue(songName);
 // END Change Song & Artist Name
 
 // START: Change genre.
-var changeGenreComp = app.project.item(4);
+var changeGenreComp = app.project.item(3);
 var genreLayer = changeGenreComp.layer(2);
 genreLayer.property("Source Text").setValue(genre);
 
 
 // START: TRIM 'Change Song' COMP TO SONG LENGTH.
-var changeSongComp = app.project.item(5);
+var changeSongComp = app.project.item(4);
 var song = changeSongComp.layer(1);
 var duration = song.outPoint - song.inPoint;
 changeSongComp.duration = duration;
 // END: TRIM 'Change Song' COMP TO SONG LENGTH.
 
 // START: SET ARTWORK TO TAKE UP FULL COMP SIZE.
-var changeVisColComp = app.project.item(2);
+var changeVisColComp = app.project.item(6);
 changeVisColComp.openInViewer();
 
 // Set the size of the artwork to match the fill composition.
@@ -64,7 +64,7 @@ app.selected = false;
 
 
 // START: SET BACKGROUND TO TAKE UP FULL COMP SIZE
-var changeBackgroundComp = app.project.item(3);
+var changeBackgroundComp = app.project.item(2);
 var background = changeBackgroundComp.layer(2);
 background.selected = true;
 changeBackgroundComp.openInViewer();
@@ -73,7 +73,7 @@ background.selected = false;
 // END: SET BACKGROUND TO TAKE UP FULL COMP SIZE
 
 // START: Change visualizer colour.
-var changeColourComp = app.project.item(7);
+var changeColourComp = app.project.item(6);
 
   // Trim the composition length to the length of the 'change song' layer.
   var changeSongLayer = changeColourComp.layer(10);
@@ -105,7 +105,7 @@ formEffect.setValue(hexToNormalisedRGB(visualizerColour));
 
 // START: Trim the 'QHQ Chromatic Aberration Source' comp to fit 'Change Song'
 // layer length.
-var chromaticAbberationComp = app.project.item(8);
+var chromaticAbberationComp = app.project.item(7);
 // alert(chromaticAbberationComp);
 chromaticAbberationComp.duration = chromaticAbberationComp.layer(3).outPoint - chromaticAbberationComp.layer(3).inPoint;
 // END: Trim the 'QHQ Chromatic Aberration Source' comp to fit 'Change Song'

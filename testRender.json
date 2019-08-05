@@ -1,12 +1,12 @@
 {
   "template": {
     "composition": "Render 1080p [Change length]",
-    "src": "file:///Users/aaronbaw/Google Drive/Surf The Music/STM Layout/STM_TEMPLATE_AUTORENDER 3.aep"
+    "src": "file:///Users/aaronbaw/Code/AutoRender/assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_BUNDLE_OLD_VERSION.aep"
   },
-  "assets": {
+  "assets": [{
     "type": "script",
     "src": "file:///Users/aaronbaw/Code/AutoRender/scripts/stm_autorender_1.jsx"
-  },
+  }],
   "actions": {
         "postrender": [
             {

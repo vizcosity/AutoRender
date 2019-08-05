@@ -4,7 +4,8 @@
   "description": "After Effects auto-rendering application for SurfTheMusic",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-render": "nexrender-cli --file testRender.json"
   },
   "repository": {
     "type": "git",
