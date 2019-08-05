@@ -19,6 +19,7 @@
   "dependencies": {
     "@nexrender/core": "^1.5.7",
     "cli": "^1.0.1",
-    "dotenv": "^8.0.0"
+    "dotenv": "^8.0.0",
+    "ejs": "^2.6.2"
   }
 }
