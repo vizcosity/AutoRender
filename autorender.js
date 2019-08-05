@@ -10,7 +10,7 @@ require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
 var nexrenderTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
 
-const DEFAULT_AE_TEMPLATE_PATH = './assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_BUNDLED.aep';
+const DEFAULT_AE_TEMPLATE_PATH = './assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_BUNDLED_OLD_VERSION.aep';
 const DEFAULT_AE_AUTORENDER_SCRIPT_PATH = './scripts/stm_autorender_1.jsx';
 const DEFAULT_OUTPUT_PATH = './.output/';
 
