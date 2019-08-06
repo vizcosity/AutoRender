@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/vizcosity/AutoRender#readme",
   "dependencies": {
+    "@nexrender/action-encode": "^1.5.8",
     "@nexrender/core": "^1.5.7",
     "cli": "^1.0.1",
     "dotenv": "^8.0.0",
