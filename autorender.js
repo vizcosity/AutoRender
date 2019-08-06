@@ -25,13 +25,13 @@ var OUTPUT_PATH = path.resolve(process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH
 const jobTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
 
 // Configure the template by replacing placeholders with the script and asset paths.
-const configureJobTemplate = (jobTemplate, outputPath) => {
+const configureJobTemplate = (jobTemplate, projectName, outputPath) => {
 
   var jobJson = { ...jobTemplate };
 
   jobJson.template.src = AE_TEMPLATE_URL;
   jobJson.assets[0].src = AE_AUTORENDER_SCRIPT_URL;
-  jobJson.actions.postrender[0].output = OUTPUT_PATH;
+  jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
 
   return jobJson;
 };
@@ -82,8 +82,9 @@ module.exports = {
       log(`Configured directory structure:`, fs.readdirSync(OUTPUT_PATH));
 
       log(`Configuring jobJson`);
-      const jobJson = configureJobTemplate(jobTemplate, outputPath);
+      const jobJson = configureJobTemplate(jobTemplate, projectName, outputPath);
       log(`Configured jobJson:`, jobJson);
+      fs.writeFileSync(path.resolve(OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
 
       log(`Configuring script template.`);
       const workingScriptPath = await configureScriptTemplate(params);

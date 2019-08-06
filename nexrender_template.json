@@ -3,23 +3,24 @@
     "composition": "Render 1080p [Change length]",
     "src": "DECLARE AE_TEMPLATE_PATH IN opts.env FILE"
   },
-  "assets": [{
-    "type": "script",
-    "src": "DECLARE AE_AUTORENDER_SCRIPT IN opts.env FILE"
-  }],
+  "assets": [
+    {
+      "type": "script",
+      "src": "DECLARE AE_AUTORENDER_SCRIPT IN opts.env FILE"
+    },
+    {
+      "type": "audio",
+      "src": "file:///Users/aaronbaw/Code/AutoRender/sampleProject/Swoosh.mp3",
+      "layerName": "Song",
+      "composition": "Change Song"
+    }
+  ],
   "actions": {
         "postrender": [
             {
                 "module": "@nexrender/action-encode",
                 "output": "DECLARE OUTPUT FOLDER IN opts.env FILE",
-                "preset": "mp4",
-                "params": {
-                    "-acodec": "aac",
-                    "-ab": "128k",
-                    "-ar": "44100",
-                    "-vcodec": "libx264",
-                    "-r": "29.97"
-                }
+                "preset": "mp4"
             }
         ]
     }
