@@ -98,7 +98,9 @@ var changeColourComp = app.project.item(6);
 var visualizer = changeColourComp.layer(7);
 // Note that all the form properties are flattened and have to be indexed at the
 // same level without nesting.
-var formEffect = visualizer.property("Effects")("Form").property(57);
+// This rests at a different index for Trapcode 14.
+var formEffect = visualizer.property("Effects")("Form").property(70);
+// alert(formEffect.name);
 formEffect.setValue(hexToNormalisedRGB(visualizerColour));
 // END: Change visualizer colour.
 
