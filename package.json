@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test-render": "nexrender-cli --file testRender.json"
+    "test-render": "nexrender-cli --file testRender.json",
+    "install": "node modules/nexrender-action-encode/link.js"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,7 @@
   },
   "homepage": "https://github.com/vizcosity/AutoRender#readme",
   "dependencies": {
+    "@nexrender/action-encode": "^1.5.8",
     "@nexrender/core": "^1.5.7",
     "cli": "^1.0.1",
     "dotenv": "^8.0.0",

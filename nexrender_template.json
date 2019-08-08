@@ -20,7 +20,13 @@
             {
                 "module": "@nexrender/action-encode",
                 "output": "DECLARE OUTPUT FOLDER IN opts.env FILE",
-                "preset": "mp4"
+                "params": {
+                    "-acodec": "aac",
+                    "-ab": "128k",
+                    "-ar": "44100",
+                    "-vcodec": "libx264",
+                    "-r": "29.97"
+                }
             }
         ]
     }
