@@ -4,12 +4,9 @@
     "src": "DECLARE AE_TEMPLATE_PATH IN opts.env FILE"
   },
   "assets": [
-
     {
-      "type": "audio",
-      "src": "file:///C:/Users/aaronbaw/Documents/Code/AutoRender/sampleProject/Swoosh.mp3",
-      "layerName": "Song",
-      "composition": "Change Song"
+      "type": "script",
+      "src": "DECLARE AE_SCRIPT_PATH in opts.env FILE"
     }
   ],
   "actions": {

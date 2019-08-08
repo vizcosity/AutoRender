@@ -10,7 +10,7 @@ require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
 var nexrenderTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
 
-const DEFAULT_AE_TEMPLATE_PATH = './assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_BUNDLED_OLD_VERSION.aep';
+const DEFAULT_AE_TEMPLATE_PATH = './assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_TRAPCODE_15.aep';
 const DEFAULT_AE_AUTORENDER_SCRIPT_PATH = './scripts/stm_autorender_trapcode_15.jsx';
 const DEFAULT_OUTPUT_PATH = './.output/';
 
@@ -25,13 +25,34 @@ var OUTPUT_PATH = path.resolve(process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH
 const jobTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
 
 // Configure the template by replacing placeholders with the script and asset paths.
-const configureJobTemplate = (jobTemplate, projectName, outputPath) => {
+const configureJobTemplate = (jobTemplate, {projectName, songPath, backgroundPath, artworkPath, outputPath}) => {
 
   var jobJson = { ...jobTemplate };
 
   jobJson.template.src = AE_TEMPLATE_URL;
   jobJson.assets[0].src = AE_AUTORENDER_SCRIPT_URL;
   jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
+
+  if (songPath) jobJson.assets.push({
+    type: "audio",
+    src: `file://${path.resolve(songPath)}`,
+    layerName: "Song",
+    composition: "Change Song"
+  });
+
+  if (backgroundPath) jobJson.assets.push({
+    type: "image",
+    src: `file://${path.resolve(backgroundPath)}`,
+    layerName: "Background",
+    composition: "Change Background"
+  });
+
+  if (artworkPath) jobJson.assets.push({
+    type: "image",
+    src: `file://${path.resolve(artworkPath)}`,
+    layerName: "Artwork",
+    composition: "Change Artwork"
+  });
 
   return jobJson;
 };
@@ -83,7 +104,7 @@ module.exports = {
       log(`Configured directory structure:`, fs.readdirSync(OUTPUT_PATH));
 
       log(`Configuring jobJson`);
-      const jobJson = configureJobTemplate(jobTemplate, projectName, outputPath);
+      const jobJson = configureJobTemplate(jobTemplate, params);
       log(`Configured jobJson:`, jobJson);
       fs.writeFileSync(path.resolve(OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
 

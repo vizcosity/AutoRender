@@ -99,8 +99,12 @@ var visualizer = changeColourComp.layer(7);
 // Note that all the form properties are flattened and have to be indexed at the
 // same level without nesting.
 // This rests at a different index for Trapcode 14.
-var formEffect = visualizer.property("Effects")("Form").property(70);
-// alert(formEffect.name);
+var form = visualizer.property("Effects")("Form");
+
+// var formEffect = visualizer.property("Effects")("Form").property(70);
+var formEffect = getPropertyByName(form, "Color");
+if (!formEffect) alert("Could not find Color property for Trapcode Form.");
+alert(formEffect.name);
 formEffect.setValue(hexToNormalisedRGB(visualizerColour));
 // END: Change visualizer colour.
 
@@ -171,5 +175,12 @@ function getCompsIncludingName(name){
 function getLayerIncludingName(comp, name){
   for (var i = 1; i < comp.numLayers; i++){
     if (comp.layer(i).name.indexOf(name) !== -1) return comp.layer(i);
+  }
+}
+
+function getPropertyByName(effect, name){
+  for (var i = 1; i < effect.numProperties; i++){
+    var property = effect.property(i);
+    if (property.name === name) return property;
   }
 }

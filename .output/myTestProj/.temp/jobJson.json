@@ -1,12 +1,16 @@
 {
   "template": {
     "composition": "Render 1080p [Change length]",
-    "src": "file:///Users/aaronbaw/Code/AutoRender/assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_BUNDLED_OLD_VERSION.aep"
+    "src": "file:///Users/aaronbaw/Code/AutoRender/assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_TRAPCODE_15.aep"
   },
   "assets": [
     {
+      "type": "script",
+      "src": "file:///Users/aaronbaw/Code/AutoRender/scripts/stm_autorender_trapcode_15.jsx"
+    },
+    {
       "type": "audio",
-      "src": "file:///Users/aaronbaw/Code/AutoRender/scripts/stm_autorender_trapcode_15.jsx",
+      "src": "file:///Users/aaronbaw/Code/AutoRender/sampleProject/Swoosh.mp3",
       "layerName": "Song",
       "composition": "Change Song"
     }
