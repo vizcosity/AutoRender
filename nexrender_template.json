@@ -15,7 +15,7 @@
   "actions": {
         "postrender": [
             {
-                "module": "@nexrender/action-encode",
+                "module": "nexrender-action-encode",
                 "output": "DECLARE OUTPUT FOLDER IN opts.env FILE",
                 "params": {
                     "-acodec": "aac",
