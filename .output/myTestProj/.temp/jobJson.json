@@ -1,0 +1,23 @@
+{
+  "template": {
+    "composition": "Render 1080p [Change length]",
+    "src": "file://C:\\Users\\aaronbaw\\Documents\\Code\\AutoRender\\assets\\STM_TEMPLATE_AUTORENDER_BUNDLED\\STM_TEMPLATE_AUTORENDER_BUNDLED_OLD_VERSION.aep"
+  },
+  "assets": [
+    {
+      "type": "audio",
+      "src": "file://C:\\Users\\aaronbaw\\Documents\\Code\\AutoRender\\scripts\\stm_autorender_1.jsx",
+      "layerName": "Song",
+      "composition": "Change Song"
+    }
+  ],
+  "actions": {
+    "postrender": [
+      {
+        "module": "@nexrender/action-encode",
+        "output": "C:\\Users\\aaronbaw\\Documents\\Code\\AutoRender\\.output/myTestProj/myTestProj_render.mp4",
+        "preset": "mp4"
+      }
+    ]
+  }
+}
