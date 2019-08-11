@@ -145,7 +145,7 @@ module.exports = (job, settings, options, type) => {
     settings.logger.log(`[${job.uid}] starting action-encode action (ffmpeg)`)
 
     return new Promise((resolve, reject) => {
-      settings.logger.log(`[${job.uid}] Waiting a few seconds...`);
+      settings.logger.log(`[${job.uid}] Waiting 30s for file write to finish...`);
       setTimeout(() => {
         const params = constructParams(job, settings, options);
         const binary = getBinary(job, settings).then(binary => {
@@ -164,7 +164,7 @@ module.exports = (job, settings, options, type) => {
                 resolve(job)
             });
         });
-      }, 5000);
+      }, 30000);
 
 
     });
