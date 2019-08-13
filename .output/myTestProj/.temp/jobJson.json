@@ -7,14 +7,14 @@
   },
   "assets": [
     {
-      "type": "script",
-      "src": "file:///Users/aaronbaw/Code/AutoRender/.output/myTestProj/.temp/myTestProj_script.jsx"
-    },
-    {
       "type": "audio",
       "src": "file:///Users/aaronbaw/Code/AutoRender/sampleProject/ShortTrack.mp3",
       "layerName": "Song",
       "composition": "Change Song"
+    },
+    {
+      "type": "script",
+      "src": "file:///Users/aaronbaw/Code/AutoRender/.output/myTestProj/.temp/myTestProj_script.jsx"
     }
   ],
   "actions": {

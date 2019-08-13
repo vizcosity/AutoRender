@@ -31,8 +31,6 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, {projectName, song
   var jobJson = { ...jobTemplate };
 
   jobJson.template.src = AE_TEMPLATE_URL;
-  jobJson.assets[0].src = `file://${path.resolve(projectScriptPath)}`;
-  jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
 
   if (songPath) jobJson.assets.push({
     type: "audio",
@@ -54,6 +52,14 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, {projectName, song
     layerName: "Artwork",
     composition: "Change Artwork"
   });
+
+  jobJson.assets.push({
+    type: 'script',
+    src: `file://${path.resolve(projectScriptPath)}`
+  });
+
+  jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
+
 
   return jobJson;
 };

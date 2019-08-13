@@ -5,12 +5,7 @@
     "outputModule": "STM_AUTORENDER_QT_DEF",
     "outputExt": "mov"
   },
-  "assets": [
-    {
-      "type": "script",
-      "src": "DECLARE AE_SCRIPT_PATH in opts.env FILE"
-    }
-  ],
+  "assets": [],
   "actions": {
         "postrender": [
             {

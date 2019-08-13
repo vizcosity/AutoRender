@@ -13,13 +13,6 @@
 // AE ESTK commands from Atom.
 // - Use alt-cmd-r to directly run the script inside of after effects.
 
-
-// TODO: Organise script as a EJS template to replace artist and song info
-// programmatically.
-
-// GLOBALS
-var fitToCompId = app.findMenuCommandId("Fit to Comp Width");
-
 // SONG SPECIFIC DETAILS
 var songName = 'Sad Machine';
 var artistName = 'Porter Robinson';
@@ -46,33 +39,6 @@ var song = changeSongComp.layer(1);
 var duration = song.outPoint - song.inPoint;
 changeSongComp.duration = duration;
 // END: TRIM 'Change Song' COMP TO SONG LENGTH.
-
-// START: SET ARTWORK TO TAKE UP FULL COMP SIZE.
-var changeArtworkComp = app.project.item(1);
-changeArtworkComp.openInViewer();
-
-// Set the size of the artwork to match the fill composition.
-var artwork = changeArtworkComp.layer(3);
-alert(changeArtworkComp.width);
-alert(artwork.width);
-artwork.selected = true;
-
-// Perform fit to comp operation.
-app.executeCommand(fitToCompId);
-
-// Deselect the layer.
-app.selected = false;
-// END: SET ARTWORK TO TAKE UP FULL COMP SIZE.
-
-
-// START: SET BACKGROUND TO TAKE UP FULL COMP SIZE
-var changeBackgroundComp = app.project.item(2);
-var background = changeBackgroundComp.layer(2);
-background.selected = true;
-changeBackgroundComp.openInViewer();
-app.executeCommand(fitToCompId);
-background.selected = false;
-// END: SET BACKGROUND TO TAKE UP FULL COMP SIZE
 
 // START: Change visualizer colour.
 var changeColourComp = app.project.item(6);
