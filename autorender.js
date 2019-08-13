@@ -6,6 +6,7 @@ const nexrender = require('@nexrender/core');
 const path = require('path');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
+const ejs = require('ejs');
 require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
 var nexrenderTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
@@ -25,12 +26,12 @@ var OUTPUT_PATH = path.resolve(process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH
 const jobTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
 
 // Configure the template by replacing placeholders with the script and asset paths.
-const configureJobTemplate = (jobTemplate, {projectName, songPath, backgroundPath, artworkPath, outputPath}) => {
+const configureJobTemplate = (jobTemplate, projectScriptPath, {projectName, songPath, backgroundPath, artworkPath, outputPath}) => {
 
   var jobJson = { ...jobTemplate };
 
   jobJson.template.src = AE_TEMPLATE_URL;
-  jobJson.assets[0].src = AE_AUTORENDER_SCRIPT_URL;
+  jobJson.assets[0].src = `file://${path.resolve(projectScriptPath)}`;
   jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
 
   if (songPath) jobJson.assets.push({
@@ -57,14 +58,17 @@ const configureJobTemplate = (jobTemplate, {projectName, songPath, backgroundPat
   return jobJson;
 };
 
-const configureScriptTemplate = ({projectName, backgroundPath, artworkPath, songPath, outputPath}) => new Promise((resolve, reject) => {
+const configureScriptTemplate = (projectDetails) => new Promise((resolve, reject) => {
   console.log(`Fetching script from`, AE_AUTORENDER_SCRIPT_PATH);
   fs.readFile(path.resolve(AE_AUTORENDER_SCRIPT_PATH), (err, autorenderScriptTemplate) => {
     autorenderScriptTemplate = autorenderScriptTemplate.toString('utf8');
+
+    // Replace placeholder contenet with project-specific details.
+    var projectScript = ejs.render(autorenderScriptTemplate, projectDetails.songDetails);
     // log(`Reading autorenderScriptTemplate:`, autorenderScriptTemplate);
     // Write the script template to the output dir.
-    const finalScriptLocation = path.resolve(OUTPUT_PATH, projectName,  '.temp', `${projectName}_script.jsx`);
-    fs.writeFile(finalScriptLocation, autorenderScriptTemplate, err => {
+    const finalScriptLocation = path.resolve(OUTPUT_PATH, projectDetails.projectName,  '.temp', `${projectDetails.projectName}_script.jsx`);
+    fs.writeFile(finalScriptLocation, projectScript, err => {
       if (err) reject(err);
       log(`Written autorenderScriptTemplate to`, finalScriptLocation)
       return resolve(finalScriptLocation);
@@ -95,22 +99,30 @@ module.exports = {
   render: function (params){
     return new Promise(async (resolve, reject) => {
 
-      var {projectName, backgroundPath, artworkPath, songPath, outputPath} = params;
+      var {
+        projectName,
+        outputPath,
+        songDetails
+      } = params;
 
-      if (!projectName) throw new Error("Project name not supplied.");
+      var { songName, artistName, genre, visualizerColour } = songDetails;
+
+      if (!projectName) return reject("Project name not supplied.");
+      if (!songName || !artistName || !genre || !visualizerColour)
+        return reject("Incomplete song details. Required: songName, artistName, genre, visualizerColour");
 
       log(`Configuring directory structure.`);
       await configureDirectoryStructure(outputPath, projectName);
       log(`Configured directory structure:`, fs.readdirSync(OUTPUT_PATH));
 
+      log(`Configuring script template.`);
+      const projectScriptPath = await configureScriptTemplate(params);
+      log(`Saved + written script template.`);
+
       log(`Configuring jobJson`);
-      const jobJson = configureJobTemplate(jobTemplate, params);
+      const jobJson = configureJobTemplate(jobTemplate, projectScriptPath, params);
       log(`Configured jobJson:`, jobJson);
       fs.writeFileSync(path.resolve(OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
-
-      log(`Configuring script template.`);
-      const workingScriptPath = await configureScriptTemplate(params);
-      log(`Saved + written script template.`);
 
       log(`Attempting to render now.`);
       const renderJob = await nexrender.render(jobJson, settings);
