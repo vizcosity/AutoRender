@@ -8,11 +8,11 @@
   "assets": [
     {
       "type": "script",
-      "src": "file:///Users/aaronbaw/Code/AutoRender/scripts/stm_autorender_trapcode_15.jsx"
+      "src": "file:///Users/aaronbaw/Code/AutoRender/.output/myTestProj/.temp/myTestProj_script.jsx"
     },
     {
       "type": "audio",
-      "src": "file:///Users/aaronbaw/Code/AutoRender/sampleProject/Swoosh.mp3",
+      "src": "file:///Users/aaronbaw/Code/AutoRender/sampleProject/ShortTrack.mp3",
       "layerName": "Song",
       "composition": "Change Song"
     }
