@@ -3,8 +3,8 @@ var autorender = require('./autorender');
 const main = async () => {
   await autorender.render({
     projectName: 'myTestProj',
-    songPath: './sampleProject/ShortTrack.mp3',
     songDetails: {
+      songPath: '../sampleProject/ShortTrack.mp3',
       songName: 'Sad Machine',
       artistName: 'Porter Robinson',
       genre: 'Progressive House',

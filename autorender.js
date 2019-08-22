@@ -11,17 +11,19 @@ require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
 var nexrenderTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
 
-const DEFAULT_AE_TEMPLATE_PATH = './assets/STM_TEMPLATE_AUTORENDER_BUNDLED/STM_TEMPLATE_AUTORENDER_TRAPCODE_15.aep';
+const DEFAULT_AE_TEMPLATE_PATH = `./assets/STM_TEMPLATE_AUTORENDER_BUNDLED/`;
 const DEFAULT_AE_AUTORENDER_SCRIPT_PATH = './scripts/stm_autorender_trapcode_15.jsx';
 const DEFAULT_OUTPUT_PATH = './.output/';
 
-var AE_TEMPLATE_PATH = process.env.AE_TEMPLATE_PATH ? process.env.AE_TEMPLATE_PATH : DEFAULT_AE_TEMPLATE_PATH;
-var AE_TEMPLATE_URL = `file://${path.resolve(AE_TEMPLATE_PATH)}`;
+
+var AE_TEMPLATE_PATH = (process.env.AE_TEMPLATE_PATH ? process.env.AE_TEMPLATE_PATH : DEFAULT_AE_TEMPLATE_PATH);
+AE_TEMPLATE_PATH += `STM_TEMPLATE_AUTORENDER_TRAPCODE_15_${process.platform === 'win32' ? 'WIN' : 'MAC'}.aep`;
+var AE_TEMPLATE_URL = `file://${path.resolve(__dirname, AE_TEMPLATE_PATH)}`;
 
 var AE_AUTORENDER_SCRIPT_PATH = process.env.AE_AUTORENDER_SCRIPT_PATH ? process.env.AE_AUTORENDER_SCRIPT_PATH : DEFAULT_AE_AUTORENDER_SCRIPT_PATH;
-var AE_AUTORENDER_SCRIPT_URL = `file://${path.resolve(AE_AUTORENDER_SCRIPT_PATH)}`;
+var AE_AUTORENDER_SCRIPT_URL = `file://${path.resolve(__dirname, AE_AUTORENDER_SCRIPT_PATH)}`;
 
-var OUTPUT_PATH = path.resolve(process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH : DEFAULT_OUTPUT_PATH);
+var OUTPUT_PATH = path.resolve(__dirname, process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH : DEFAULT_OUTPUT_PATH);
 
 const jobTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
 
@@ -32,6 +34,10 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, {projectName, song
 
   jobJson.template.src = AE_TEMPLATE_URL;
 
+  // Here it's important that the paths are considered from the directory in which
+  // the process itself is ran, as the paths will be relative to this directory.
+
+  // TODO: Edit this to support songFiles.
   if (songPath) jobJson.assets.push({
     type: "audio",
     src: `file://${path.resolve(songPath)}`,
@@ -66,14 +72,14 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, {projectName, song
 
 const configureScriptTemplate = (projectDetails) => new Promise((resolve, reject) => {
   console.log(`Fetching script from`, AE_AUTORENDER_SCRIPT_PATH);
-  fs.readFile(path.resolve(AE_AUTORENDER_SCRIPT_PATH), (err, autorenderScriptTemplate) => {
+  fs.readFile(path.resolve(__dirname, AE_AUTORENDER_SCRIPT_PATH), (err, autorenderScriptTemplate) => {
     autorenderScriptTemplate = autorenderScriptTemplate.toString('utf8');
 
     // Replace placeholder contenet with project-specific details.
     var projectScript = ejs.render(autorenderScriptTemplate, projectDetails.songDetails);
     // log(`Reading autorenderScriptTemplate:`, autorenderScriptTemplate);
     // Write the script template to the output dir.
-    const finalScriptLocation = path.resolve(OUTPUT_PATH, projectDetails.projectName,  '.temp', `${projectDetails.projectName}_script.jsx`);
+    const finalScriptLocation = path.resolve(__dirname, OUTPUT_PATH, projectDetails.projectName,  '.temp', `${projectDetails.projectName}_script.jsx`);
     fs.writeFile(finalScriptLocation, projectScript, err => {
       if (err) reject(err);
       log(`Written autorenderScriptTemplate to`, finalScriptLocation)
@@ -86,11 +92,13 @@ const configureScriptTemplate = (projectDetails) => new Promise((resolve, reject
 const configureDirectoryStructure = (outputPath, projectName) => new Promise((resolve, reject) => {
 
   // Set the new OUTPUT_PATH.
-  if (outputPath) OUTPUT_PATH = path.resolve(outputPath);
+  if (outputPath) OUTPUT_PATH = path.resolve(__dirname, outputPath);
 
-  log(`Creating directory structure in`, path.resolve(OUTPUT_PATH, projectName, '.temp'));
+  let tempDir = path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp');
 
-  mkdirp(path.resolve(OUTPUT_PATH, projectName, '.temp'), (err) => {
+  log(`Creating temporary directory structure in`, tempDir);
+
+  mkdirp(tempDir, (err) => {
     if (err) reject(err);
     return resolve();
   });
@@ -113,6 +121,8 @@ module.exports = {
 
       var { songName, artistName, genre, visualizerColour } = songDetails;
 
+      log(`Recieved request to render with params:`, params, `and details`, songDetails);
+
       if (!projectName) return reject("Project name not supplied.");
       if (!songName || !artistName || !genre || !visualizerColour)
         return reject("Incomplete song details. Required: songName, artistName, genre, visualizerColour");
@@ -126,13 +136,15 @@ module.exports = {
       log(`Saved + written script template.`);
 
       log(`Configuring jobJson`);
-      const jobJson = configureJobTemplate(jobTemplate, projectScriptPath, params);
+      const jobJson = configureJobTemplate(jobTemplate, projectScriptPath, params.songDetails);
       log(`Configured jobJson:`, jobJson);
-      fs.writeFileSync(path.resolve(OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
+      fs.writeFileSync(path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
 
       log(`Attempting to render now.`);
       const renderJob = await nexrender.render(jobJson, settings);
       log(`Finished rendering`, renderJob);
+
+      return resolve(renderJob);
 
     });
   }

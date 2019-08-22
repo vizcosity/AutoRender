@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "RESTful API interface for queueing, checking, removing, and downloading job results for videos rendered with AutoRender Core (super dir).",
   "main": "app.js",
+  "api-version": "1",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
