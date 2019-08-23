@@ -50,7 +50,7 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectN
 
   if (backgroundFile) jobJson.assets.push({
     type: "image",
-    src: copyFileAndReturnFileURI(backgroundFile), tempDir,
+    src: copyFileAndReturnFileURI(backgroundFile, tempDir),
     layerName: "Background",
     composition: "Change Background"
   });

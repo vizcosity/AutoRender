@@ -19,69 +19,59 @@ var artistName = '<%= artistName %>';
 var genre = '<%= genre %>';
 var visualizerColour = '<%= visualizerColour %>';
 
+
 // START: Change Song & Artist Name
-var changeSongTitleComp = app.project.item(5);
-var artistNameLayer = changeSongTitleComp.layer(4);
-var songNameLayer = changeSongTitleComp.layer(5);
-artistNameLayer.property("Source Text").setValue(artistName);
-songNameLayer.property("Source Text").setValue(songName);
+nexrender.selectCompositionsByName('Change Song Title', function(changeSongTitleComp){
+  var artistNameLayer = changeSongTitleComp.layer(4);
+  var songNameLayer = changeSongTitleComp.layer(5);
+  artistNameLayer.property("Source Text").setValue(artistName);
+  songNameLayer.property("Source Text").setValue(songName);
+});
 // END Change Song & Artist Name
 
 // START: Change genre.
-var changeGenreComp = app.project.item(3);
-var genreLayer = changeGenreComp.layer(2);
-genreLayer.property("Source Text").setValue(genre);
-
+nexrender.selectCompositionsByName('Change Genre', function(changeGenreComp){
+  var genreLayer = changeGenreComp.layer(2);
+  genreLayer.property("Source Text").setValue(genre);
+});
+// END: Change genre.
 
 // START: TRIM 'Change Song' COMP TO SONG LENGTH.
-var changeSongComp = app.project.item(4);
-var song = changeSongComp.layer(1);
-var duration = song.outPoint - song.inPoint;
-changeSongComp.duration = duration;
+nexrender.selectCompositionsByName('Change Song', function(changeSongComp){
+  var song = changeSongComp.layer(1);
+  var duration = song.outPoint - song.inPoint;
+  changeSongComp.duration = duration;
+});
 // END: TRIM 'Change Song' COMP TO SONG LENGTH.
 
 // START: Change visualizer colour.
-var changeColourComp = app.project.item(6);
-
+nexrender.selectCompositionsByName('Change Visualizer Colour', function(changeColourComp){
   // Trim the composition length to the length of the 'change song' layer.
   var changeSongLayer = changeColourComp.layer(10);
   changeColourComp.duration = changeSongLayer.outPoint - changeSongLayer.inPoint;
 
-  // Make sure each layer is as long as the entire composition.
-  // for (var i = 1; i < changeColourComp.numLayers; i++){
-  //         var layer = changeColourComp.layer(i);
-  //
-  //         // If thel layer hasn't been marked with an 'Red' label, then we
-  //         // set the layer length to that of the entire composition.
-  //         if (layer.label === 1) continue;
-  //
-  //         // Set the inPoint to 0 so that the layer starts from the very beginning of the composition.
-  //         layer.inPoint = 0;
-  //         // Set the outPoint to be the entire duration of the composition.
-  //         layer.outPoint = changeColourComp.duration;
-  // }
   trimLayersToComp(changeColourComp, 1);
-  // End trimming 'Change Visualizer Colour' layer items being fitted to comp length.
 
-var visualizer = changeColourComp.layer(7);
-// Note that all the form properties are flattened and have to be indexed at the
-// same level without nesting.
-// This rests at a different index for Trapcode 14.
-var form = visualizer.property("Effects")("Form");
+  var visualizer = changeColourComp.layer(7);
+  // Note that all the form properties are flattened and have to be indexed at the
+  // same level without nesting.
+  // This rests at a different index for Trapcode 14.
+  var form = visualizer.property("Effects")("Form");
 
-// var formEffect = visualizer.property("Effects")("Form").property(70);
-var formEffect = getPropertyByName(form, "Color");
-if (!formEffect) alert("Could not find Color property for Trapcode Form.");
-// alert(formEffect.name);
-formEffect.setValue(hexToNormalisedRGB(visualizerColour));
+  // var formEffect = visualizer.property("Effects")("Form").property(70);
+  var formEffect = getPropertyByName(form, "Color");
+  if (!formEffect) alert("Could not find Color property for Trapcode Form.");
+  // alert(formEffect.name);
+  formEffect.setValue(hexToNormalisedRGB(visualizerColour));
+});
 // END: Change visualizer colour.
 
 
 // START: Trim the 'QHQ Chromatic Aberration Source' comp to fit 'Change Song'
 // layer length.
-var chromaticAbberationComp = app.project.item(7);
-// alert(chromaticAbberationComp);
-chromaticAbberationComp.duration = chromaticAbberationComp.layer(3).outPoint - chromaticAbberationComp.layer(3).inPoint;
+nexrender.selectCompositionsByName('Chromatic Aberration', function(chromaticAbberationComp){
+  chromaticAbberationComp.duration = chromaticAbberationComp.layer(3).outPoint - chromaticAbberationComp.layer(3).inPoint;
+});
 // END: Trim the 'QHQ Chromatic Aberration Source' comp to fit 'Change Song'
 // layer length.
 

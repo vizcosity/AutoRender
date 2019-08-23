@@ -62,12 +62,16 @@ const encodePathAsURI = input => {
        let fileBuffer = Buffer.from(file);
        let filetype = fileType(fileBuffer).ext;
        let randomName = Math.random().toString(36).substring(2);
-       let filename = `${randomName}.${filetype}`;
+       // let filename = `${randomName}.${filetype}`;
+       let filename = `asset.${filetype}`;
        let copiedFilePath = path.resolve(copyDir, filename);
 
        log(`Writing filebuffer to`, copiedFilePath);
 
-       fs.writeFileSync(copiedFilePath, file);
+       fs.writeFileSync(copiedFilePath, file, {
+         mode: 0o777,
+         encoding: 'binary'
+       });
 
        return copiedFilePath;
      }

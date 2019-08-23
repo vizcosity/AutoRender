@@ -21,9 +21,10 @@ const main = async () => {
     songDetails: {
       projectName: 'myShortTest',
       songFile: fs.readFileSync('./sampleProject/ShortSound.mp3'),
-      artworkFile: fs.readFileSync('./sampleProject/SampleArtwork.png'),
+      artworkFile: fs.readFileSync('sampleProject/SampleArtwork.png'),
       songName: 'Sad Machine',
-      artistName: 'Porter Robinson',
+      artistName: 'Tester',
+      backgroundFile: fs.readFileSync('./sampleProject/wilfried-santer-zelgyeLINKc-unsplash.jpg'),
       genre: 'Progressive House',
       visualizerColour: '#c7254e'
     }
