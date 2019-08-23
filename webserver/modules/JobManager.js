@@ -7,6 +7,10 @@
 // Dependencies.
 const path = require('path');
 const autorender = require(path.resolve(__dirname, '../../autorender'));
+const Datauri = require('datauri');
+const fileType = require('file-type');
+
+const datauri = new Datauri();
 
 // Defaults / constants
 const _POLLING_RATE = 1000 * 30; // 30 seconds.
@@ -76,6 +80,8 @@ class Job {
     this.queued = false;
     this.status = 'unqueued';
     this.progress = -1;
+    this.outputPath = null;
+    this.outputFile = null;
   }
 
   prepareForQueue(id){
@@ -120,8 +126,8 @@ class Job {
   }
 
   getOutputFile(){
-    if (this.status !== 'completed' || !this.outputPath);
-      return this.log(`Attempted to get output file for uncompleted job`, job);
+    if (this.status !== 'completed' || !this.outputPath)
+      return this.log(`Attempted to get output file for uncompleted job`, this.status, this.outputPath);
 
     // Read the file from the output directory.
     return fs.readFileSync(this.outputPath);
@@ -130,6 +136,10 @@ class Job {
 
   toString(){
     return this.id ? `Job { id: ${this.id} }` : this;
+  }
+
+  log(...msg){
+    log(`[JOB]`, ...msg);
   }
 
 }
@@ -190,7 +200,7 @@ class JobQueue {
 
   }
 
-  markFailed(){
+  markFailed(job){
 
     this.log(`Moving`, job, `to failed queue.`);
 
@@ -219,7 +229,11 @@ class JobQueue {
 // Should be able to access all functionality from an instance of this class.
 class JobManager {
 
-  constructor({jobs, pollingRate}){
+  constructor(params){
+
+    if (params)
+      var {jobs, pollingRate} = params;
+
     this.queue = jobs ? new JobsQueue(jobs) : new JobQueue();
     this.worker = new JobWorker(this.queue, {pollingRate});
 
@@ -236,6 +250,39 @@ class JobManager {
 
   getJobById(id){
     return this.queue.getJobById(id);
+  }
+
+  getCompletedJobFilePath(id){
+    let job = this.getJobById(id);
+    return job ? job.outputPath : null;
+  }
+
+  getCompletedJobFile(id){
+    let job = this.getJobById(id);
+    return job ? job.getOutputFile() : null;
+  }
+
+  getCompletedJobDataURI(id){
+    let fileBuffer = this.getCompletedJobFile(id);
+    if (!fileBuffer) return null;
+
+    try
+
+      // Grab the filetype.
+      let jobFileType = fileType(fileBuffer).ext;
+
+      this.log(`Determined job file type:`, jobFileType);
+
+      // Encode the data as a base64 URI.
+      let encodedBase64= datauri(jobFileType, fileBuffer.toString('base64'));
+
+
+
+      return encodedBase64.content;
+
+    } catch(e){
+      this.log(`Could not convert job`, this.id, `to Base64 URI:`, e);
+    }
   }
 
 }

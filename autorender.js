@@ -110,6 +110,7 @@ const settings = nexrender.init({
 });
 
 module.exports = {
+  // TODO: Add support for a callback function whic is called everytime the render progress changes, so that the Job object progress property can be updated.
   render: function (params){
     return new Promise(async (resolve, reject) => {
 

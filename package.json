@@ -22,8 +22,10 @@
     "@nexrender/action-encode": "^1.5.8",
     "@nexrender/core": "^1.5.7",
     "cli": "^1.0.1",
+    "datauri": "^2.0.0",
     "dotenv": "^8.0.0",
     "ejs": "^2.6.2",
+    "file-type": "^12.2.0",
     "mkdirp": "^0.5.1"
   }
 }
