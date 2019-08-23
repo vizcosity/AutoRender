@@ -32,7 +32,7 @@ class JobDetail {
   constructor({
     projectName,
     songName,
-    songPath,
+    songFile,
     genre,
     artistName,
     backgroundFile,
@@ -40,7 +40,7 @@ class JobDetail {
   }){
     this.projectName = projectName;
     this.songName = songName;
-    this.songPath = songPath;
+    this.songFile = songFile;
     this.genre = genre;
     this.artistName = artistName;
     this.backgroundFile = backgroundFile;
@@ -56,7 +56,7 @@ class Job {
     id,
     projectName,
     songName,
-    songPath,
+    songFile,
     genre,
     artistName,
     backgroundFile,
@@ -66,9 +66,9 @@ class Job {
     this.details = new JobDetail({
       projectName,
       songName,
-      // TODO: Check if the songFile is a path, or an actual file which should be
+      // TODO: Check if the songFile is a File, or an actual file which should be
       // encoded as a blob.
-      songPath,
+      songFile,
       genre,
       artistName,
       backgroundFile,
@@ -266,7 +266,7 @@ class JobManager {
     let fileBuffer = this.getCompletedJobFile(id);
     if (!fileBuffer) return null;
 
-    try
+    try {
 
       // Grab the filetype.
       let jobFileType = fileType(fileBuffer).ext;

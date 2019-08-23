@@ -1,5 +1,5 @@
 node_modules/
 private/
 .output/
-.output/
 ./.output/
+.uploads/

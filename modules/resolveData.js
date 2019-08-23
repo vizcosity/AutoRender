@@ -62,8 +62,7 @@ const encodePathAsURI = input => {
        let fileBuffer = Buffer.from(file);
        let filetype = fileType(fileBuffer).ext;
        let randomName = Math.random().toString(36).substring(2);
-       // let filename = `${randomName}.${filetype}`;
-       let filename = `asset.${filetype}`;
+       let filename = `${randomName}.${filetype}`;
        let copiedFilePath = path.resolve(copyDir, filename);
 
        log(`Writing filebuffer to`, copiedFilePath);
