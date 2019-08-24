@@ -5,6 +5,7 @@
   "main": "app.js",
   "api-version": "1",
   "scripts": {
+    "start": "DEBUG=true node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Aaron Baw",
