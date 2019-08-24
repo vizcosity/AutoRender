@@ -19,6 +19,7 @@ const DEFAULT_OUTPUT_PATH = './.output/';
 
 var AE_TEMPLATE_PATH = (process.env.AE_TEMPLATE_PATH ? process.env.AE_TEMPLATE_PATH : DEFAULT_AE_TEMPLATE_PATH);
 AE_TEMPLATE_PATH += `STM_TEMPLATE_AUTORENDER_TRAPCODE_15_${process.platform === 'win32' ? 'WIN' : 'MAC'}.aep`;
+if (process.env.AE_TEMPLATE) AE_TEMPLATE_PATH = process.env.AE_TEMPLATE;
 var AE_TEMPLATE_URL = `file://${path.resolve(__dirname, AE_TEMPLATE_PATH)}`;
 
 var AE_AUTORENDER_SCRIPT_PATH = process.env.AE_AUTORENDER_SCRIPT_PATH ? process.env.AE_AUTORENDER_SCRIPT_PATH : DEFAULT_AE_AUTORENDER_SCRIPT_PATH;
