@@ -7,6 +7,8 @@
 // Dependencies.
 const dotenv = require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
+const rimraf = require('rimraf');
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -64,8 +66,6 @@ app.post(`${endpointPrefix}/queueJob`, upload.fields([{
         jobDetail[fieldname] = req.files[fieldname][0].buffer
       });
 
-      console.log(jobDetail);
-
       if (!jobDetail.songName || !jobDetail.songFile || !jobDetail.artistName || !jobDetail.genre)
         return res.send({
           success: false,
@@ -74,15 +74,67 @@ app.post(`${endpointPrefix}/queueJob`, upload.fields([{
 
       log(`Created jobDetail for project:`, jobDetail.projectName);
 
+      // Create a copy of the job object so that we don't overwrite the buffered
+      // files.
       let job = manager.enqueueJob(jobDetail);
 
       return res.send({
         success: true,
-        job
+        // The `truncateBuffers` paramter replaces all file buffers which have been
+        // included in the original post request with `<BufferedFile>` string placeholders
+        // to reduce space.
+        job: req.body.truncateBuffers ? job.truncatedBuffers() : job
       })
 
 });
 
+app.delete(`${endpointPrefix}/job`, (req, res) => {
+  if (!req.body.id) return res.send({success: false, reason: "Job ID not passed."});
+
+  let removedJob = manager.queue.remove(req.body.id);
+
+  return res.send({
+    success: removedJob !== false,
+    job: req.truncateBuffers ? removedJob.truncatedBuffers() : removedJob
+  })
+
+});
+
+app.get(`${endpointPrefix}/jobDetail`, (req, res) => {
+  if (!req.body.id) return res.send({success: false, reason: "Job ID not passed."});
+
+    let job = manager.getJobById(req.body.id);
+
+    if (!job) return res.send({success: false, reason: "No Job with given ID found."});
+    return res.send({success: true, job: req.body.truncateBuffers ? job.truncatedBuffers() : job});
+
+});
+
+app.get(`${endpointPrefix}/jobResult`, (req, res) => {
+  if (!req.body.id) return res.send({success: false, reason: "Job ID not passed."});
+
+  let job = manager.getJobById(req.body.id);
+  let jobResultPath = manager.getCompletedJobFilePath(req.body.id);
+  if (!jobResultPath) return res.send({sucess: false, reason: "Likely uncompleted job or job not found.", job});
+
+  res.download(jobResultPath);
+
+  if (req.body.cleanup) rimraf(path.resolve(job.outputPath, '../'), () => log(`Cleaned`, path.resolve(job.outputPath, '../'), `for job`, job));
+  return;
+});
+
+app.get(`${endpointPrefix}/jobs`, (req, res) => {
+
+  if (req.body.filter) {
+    let filtered = manager.queue[req.body.filter];
+    if (!filtered) filtered = [];
+    return res.send({success: true, jobs: req.body.truncateBuffers ? filtered.map(job => job.truncatedBuffers()) : filtered});
+  }
+
+  let jobs = manager.queue.all();
+  return res.send({success: true, jobs: req.body.truncateBuffers ? jobs.map(job => job.truncateBuffers) : jobs});
+
+});
 
 app.listen(_PORT, () => log(`Listening on`,
 _PORT));

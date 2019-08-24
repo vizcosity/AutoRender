@@ -35,6 +35,7 @@ class JobDetail {
     songFile,
     genre,
     artistName,
+    artworkFile,
     backgroundFile,
     visualizerColour
   }){
@@ -43,6 +44,7 @@ class JobDetail {
     this.songFile = songFile;
     this.genre = genre;
     this.artistName = artistName;
+    this.artworkFile = artworkFile;
     this.backgroundFile = backgroundFile;
     this.visualizerColour = visualizerColour;
   }
@@ -59,6 +61,7 @@ class Job {
     songFile,
     genre,
     artistName,
+    artworkFile,
     backgroundFile,
     visualizerColour
   }){
@@ -69,6 +72,7 @@ class Job {
       // TODO: Check if the songFile is a File, or an actual file which should be
       // encoded as a blob.
       songFile,
+      artworkFile,
       genre,
       artistName,
       backgroundFile,
@@ -113,8 +117,9 @@ class Job {
 
   }
 
-  prepareForFailure(){
+  prepareForFailure(e){
     this.setStatus('failed');
+    this.failureReason = e;
   }
 
   setStatus(newStatus){
@@ -132,6 +137,20 @@ class Job {
     // Read the file from the output directory.
     return fs.readFileSync(this.outputPath);
 
+  }
+
+  truncatedBuffers(){
+    // Create a copy of the job object so that we don't overwrite the buffered
+    // files.
+    let jobCopy = JSON.parse(JSON.stringify(this));
+
+    // Replace buffered files with placeholder strings to reduce size of response.
+    Object.keys(this.details).forEach(detailField => {
+      let value = this.details[detailField];
+      jobCopy.details[detailField] = value instanceof Buffer ? '<BufferedFile>' : value;
+    });
+
+    return jobCopy;
   }
 
   toString(){
@@ -161,12 +180,10 @@ class JobQueue {
 
   enqueue(job){
 
-    // Set the id for the job.
-    let id = this.all().length;
-    job = job.prepareForQueue(id);
+    job = job.prepareForQueue();
     this.pending.push(job);
 
-    this.log(`Added`, job, `to the queue.`);
+    this.log(`Added`, job.id, `to the queue.`);
 
     return job;
   }
@@ -180,17 +197,34 @@ class JobQueue {
     job = job.prepareForDequeue();
     this.active.push(job);
 
-    this.log(`Dequeueing`, job, `and moving to active queue [${this.active.length}]`);
+    this.log(`Dequeueing`, job.id, `and moving to active queue [${this.active.length}]`);
 
     return job;
   }
 
+  remove(id){
+
+    let jobToRemove = this.getJobById(id);
+    if (!jobToRemove) return false;
+
+
+    this.active = this.active.filter(job => job.id !== id);
+    this.pending = this.pending.filter(job => job.id !== id);
+    this.completed = this.completed.filter(job => job.id !== id);
+    this.failed = this.failed.filter(job => job.id !== id);
+
+    this.log(`Removed`, id, `from`, job.status, `queue.`);
+
+    return jobToRemove;
+
+  }
+
   completeJob(job){
 
-    this.log(`Moving`, job, `to completed queue.`);
+    this.log(`Moving`, job.id, `to completed queue.`);
 
     if (this.active.filter(activeJob => activeJob.id === job.id).length !== 1)
-      return this.log(`Job`,job, `not found in active queue.`);
+      return this.log(`Job`,job.id, `not found in active queue.`);
 
     // Find the job in the queue, and move it.
     this.active = this.active.filter(activeJob => activeJob.id !== job.id);
@@ -202,10 +236,10 @@ class JobQueue {
 
   markFailed(job){
 
-    this.log(`Moving`, job, `to failed queue.`);
+    this.log(`Moving`, job.id, `to failed queue.`);
 
     if (this.active.filter(activeJob => activeJob.id === job.id).length !== 1)
-      return this.log(`Job`,job, `not found in active queue.`);
+      return this.log(`Job`,job.id, `not found in active queue.`);
 
     // Find the job in the queue, and move it.
     this.active = this.active.filter(job => job.id !== job.id);
@@ -312,7 +346,7 @@ class JobWorker {
     this.listenerProcess = setInterval(function(){
 
       if (!self.listening) {
-        this.log(`No longer listening. Clearing interval process.`);
+        self.log(`Waiting for current job to complete before dequeuing next job.`);
         return clearInterval(this.listenerProcess);
       }
 
@@ -325,6 +359,9 @@ class JobWorker {
 
       self.log(`Pulled job off the queue:`, job);
 
+      // Set listening to false for now (so that we only render one job at a time.).
+      self.listening = false;
+
       // render the job by passing the 'details' to AutoRender.
       self.log(`Attempting to send job to autorender.`);
 
@@ -335,7 +372,7 @@ class JobWorker {
         songDetails: job.details
       }).then(result => {
 
-        self.log(`Finished rendering`, job, `with result:`, result);
+        self.log(`Finished rendering`, job.id, `with result:`, result);
 
         // Mark the job as completed.
         job.prepareForCompletion(result);
@@ -343,13 +380,18 @@ class JobWorker {
         // Move the job from the active queue to the completed queue.
         self.queue.completeJob(job);
 
+        // Resume listening for new jobs.
+        self.listening = true;
       })
       .catch(e => {
-        self.log(`Error rendering`, job, `with error:`, e);
+        self.log(`Error rendering`, job.id, `with error:`, e);
 
-        job.prepareForFailure();
+        job.prepareForFailure(e);
 
         self.queue.markFailed(job);
+
+        // Resume listening for new jobs.
+        self.listening = true;
       });
 
     }, this.pollingRate);

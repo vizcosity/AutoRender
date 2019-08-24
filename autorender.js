@@ -144,12 +144,13 @@ module.exports = {
       fs.writeFileSync(path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
 
       log(`Attempting to render now.`);
-      const renderJob = await nexrender.render(jobJson, settings);
+      try {
+        const renderJob = await nexrender.render(jobJson, settings);
+        // TODO: Add cleanup operation.
+
+        return resolve(renderJob);
+      } catch(e){ return reject(e) }
       log(`Finished rendering`, renderJob);
-
-      // TODO: Add cleanup operation.
-
-      return resolve(renderJob);
 
     });
   }
