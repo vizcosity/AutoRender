@@ -213,7 +213,7 @@ class JobQueue {
     this.completed = this.completed.filter(job => job.id !== id);
     this.failed = this.failed.filter(job => job.id !== id);
 
-    this.log(`Removed`, id, `from`, job.status, `queue.`);
+    this.log(`Removed`, id, `from`, this.status, `queue.`);
 
     return jobToRemove;
 

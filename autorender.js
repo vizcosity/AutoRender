@@ -44,21 +44,26 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectN
   if (songFile) jobJson.assets.push({
     type: "audio",
     src: copyFileAndReturnFileURI(songFile, tempDir),
-    layerName: "Song",
+    // layerName: "Song",
+    // Use layer indeces for now as they are more stable. (Multiple renders seem
+    // to unreliably change the layerNames for subsequent renders)
+    layerIndex: 1,
     composition: "Change Song"
   });
 
   if (backgroundFile) jobJson.assets.push({
     type: "image",
     src: copyFileAndReturnFileURI(backgroundFile, tempDir),
-    layerName: "Background",
+    // layerName: "Background",
+    layerIndex: 2,
     composition: "Change Background"
   });
 
   if (artworkFile) jobJson.assets.push({
     type: "image",
     src: copyFileAndReturnFileURI(artworkFile, tempDir),
-    layerName: "Artwork",
+    // layerName: "Artwork",
+    layerIndex: 3,
     composition: "Change Artwork"
   });
 

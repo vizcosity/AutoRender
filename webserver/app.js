@@ -132,7 +132,7 @@ app.get(`${endpointPrefix}/jobs`, (req, res) => {
   }
 
   let jobs = manager.queue.all();
-  return res.send({success: true, jobs: req.body.truncateBuffers ? jobs.map(job => job.truncateBuffers) : jobs});
+  return res.send({success: true, jobs: req.body.truncateBuffers ? jobs.map(job => job.truncatedBuffers()) : jobs});
 
 });
 
