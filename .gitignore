@@ -3,3 +3,4 @@ private/
 .output/
 ./.output/
 .uploads/
+*.env
