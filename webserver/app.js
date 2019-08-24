@@ -141,5 +141,5 @@ _PORT));
 
 // Logging.
 function log(...msg){
-  if (process.env.DEBUG) console.log(path.basename(__filename.split('.')[0]).toUpperCase(), '|', ...msg);
+  console.log(path.basename(__filename.split('.')[0]).toUpperCase(), '|', ...msg);
 }
