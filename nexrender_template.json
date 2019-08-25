@@ -3,21 +3,14 @@
     "composition": "Render 1080p [Change length]",
     "src": "DECLARE AE_TEMPLATE_PATH IN opts.env FILE",
     "outputModule": "STM_AUTORENDER_QT_DEF",
-    "outputExt": "mov"
+    "outputExt": "mp4"
   },
   "assets": [],
   "actions": {
         "postrender": [
             {
-                "module": "nexrender-action-encode",
-                "output": "DECLARE OUTPUT FOLDER IN opts.env FILE",
-                "params": {
-                    "-acodec": "aac",
-                    "-ab": "128k",
-                    "-ar": "44100",
-                    "-vcodec": "libx264",
-                    "-r": "29.97"
-                }
+                "module": "@nexrender/action-copy",
+                "output": "DECLARE OUTPUT FOLDER IN opts.env FILE"
             }
         ]
     }
