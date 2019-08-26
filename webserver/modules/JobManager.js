@@ -346,7 +346,7 @@ class JobWorker {
     this.listenerProcess = setInterval(function(){
 
       if (!self.listening) {
-        self.log(`Waiting for current job to complete before dequeuing next job.`);
+        // self.log(`Waiting for current job to complete before dequeuing next job.`);
         return clearInterval(this.listenerProcess);
       }
 
