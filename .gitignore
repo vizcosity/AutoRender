@@ -4,3 +4,5 @@ private/opts.env
 ./.output/
 .uploads/
 *.env
+*.DS_Store
+.DS_Store
