@@ -101,38 +101,38 @@ app.delete(`${endpointPrefix}/job`, (req, res) => {
 });
 
 app.get(`${endpointPrefix}/jobDetail`, (req, res) => {
-  if (!req.body.id) return res.send({success: false, reason: "Job ID not passed."});
+  if (!req.query.id) return res.send({success: false, reason: "Job ID not passed."});
 
     let job = manager.getJobById(req.body.id);
 
     if (!job) return res.send({success: false, reason: "No Job with given ID found."});
-    return res.send({success: true, job: req.body.truncateBuffers ? job.truncatedBuffers() : job});
+    return res.send({success: true, job: req.query.truncateBuffers ? job.truncatedBuffers() : job});
 
 });
 
 app.get(`${endpointPrefix}/jobResult`, (req, res) => {
-  if (!req.body.id) return res.send({success: false, reason: "Job ID not passed."});
+  if (!req.query.id) return res.send({success: false, reason: "Job ID not passed."});
 
-  let job = manager.getJobById(req.body.id);
-  let jobResultPath = manager.getCompletedJobFilePath(req.body.id);
+  let job = manager.getJobById(req.query.id);
+  let jobResultPath = manager.getCompletedJobFilePath(req.query.id);
   if (!jobResultPath) return res.send({sucess: false, reason: "Likely uncompleted job or job not found.", job});
 
   res.download(jobResultPath);
 
-  if (req.body.cleanup) rimraf(path.resolve(job.outputPath, '../'), () => log(`Cleaned`, path.resolve(job.outputPath, '../'), `for job`, job));
+  if (req.query.cleanup) rimraf(path.resolve(job.outputPath, '../'), () => log(`Cleaned`, path.resolve(job.outputPath, '../'), `for job`, job));
   return;
 });
 
 app.get(`${endpointPrefix}/jobs`, (req, res) => {
 
-  if (req.body.filter) {
+  if (req.query.filter) {
     let filtered = manager.queue[req.body.filter];
     if (!filtered) filtered = [];
-    return res.send({success: true, jobs: req.body.truncateBuffers ? filtered.map(job => job.truncatedBuffers()) : filtered});
+    return res.send({success: true, jobs: req.query.truncateBuffers ? filtered.map(job => job.truncatedBuffers()) : filtered});
   }
 
   let jobs = manager.queue.all();
-  return res.send({success: true, jobs: req.body.truncateBuffers ? jobs.map(job => job.truncatedBuffers()) : jobs});
+  return res.send({success: true, jobs: req.query.truncateBuffers ? jobs.map(job => job.truncatedBuffers()) : jobs});
 
 });
 

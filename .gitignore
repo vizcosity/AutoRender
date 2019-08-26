@@ -1,8 +1,7 @@
 node_modules/
-private/opts.env
+private/
 .output/
 ./.output/
 .uploads/
 *.env
-*.DS_Store
 .DS_Store

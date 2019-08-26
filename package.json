@@ -29,6 +29,9 @@
     "ejs": "^2.6.2",
     "file-type": "^12.2.0",
     "mkdirp": "^0.5.1",
+    "react-reveal": "^1.2.2",
+    "react-router-dom": "^5.0.1",
+    "react-spinners": "^0.6.1",
     "rimraf": "^3.0.0"
   }
 }
