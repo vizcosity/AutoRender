@@ -18,14 +18,22 @@ const _AUTORENDER_API_ENDPOINT = process.env.AUTORENDER_API_ENDPOINT;
 
 if (!_AUTORENDER_API_ENDPOINT) throw new Error("AutoRender API endpoint not set.");
 
-app.use(proxy('http://localhost:3050', {
-  limit: '500mb'
-}));
-
 // TODO: Configure static routes.
 if (!process.env.DEVELOPMENT){
   app.use('/', express.static(path.join(__dirname, 'build')))
+  // Redirect all get requests to index.
+  app.get('/*', (req, res, next) => {
+    if (req.path === '/newRenderJob' || req.path === '/manageJobs')
+    return res.sendFile(path.resolve(__dirname, './build', 'index.html'));
+
+    return next();
+  });
+
 }
+
+app.use(proxy(_AUTORENDER_API_ENDPOINT, {
+  limit: '500mb'
+}));
 
 app.listen(_PORT, () => log(`Listening on`,
 _PORT));
