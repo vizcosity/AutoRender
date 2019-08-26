@@ -9,6 +9,7 @@ const path = require('path');
 const autorender = require(path.resolve(__dirname, '../../autorender'));
 const Datauri = require('datauri');
 const fileType = require('file-type');
+const moment = require('moment');
 
 const datauri = new Datauri();
 
@@ -417,5 +418,5 @@ module.exports = {
 }
 
 function log(...msg) {
-  console.log(`JOB MANAGER`, ...msg);
+  console.log(moment().format("HH:MM"),`JOB MANAGER`, ...msg);
 }
