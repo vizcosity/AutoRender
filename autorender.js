@@ -159,7 +159,8 @@ module.exports = {
       log(`Finished rendering`, renderJob);
 
     });
-  }
+  },
+  OUTPUT_PATH
 }
 
 function log(...msg){

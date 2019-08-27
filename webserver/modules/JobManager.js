@@ -6,12 +6,16 @@
 
 // Dependencies.
 const path = require('path');
+const fs = require('fs');
+const glob = require('glob');
 const autorender = require(path.resolve(__dirname, '../../autorender'));
 const Datauri = require('datauri');
 const fileType = require('file-type');
 const moment = require('moment');
 
 const datauri = new Datauri();
+
+
 
 // Defaults / constants
 const _POLLING_RATE = 1000 * 30; // 30 seconds.
@@ -70,7 +74,7 @@ class Job {
     this.details = new JobDetail({
       projectName,
       songName,
-      // TODO: Check if the songFile is a File, or an actual file which should be
+      // TODO: Check if the songFile is a path, or an actual file which should be
       // encoded as a blob.
       songFile,
       artworkFile,
@@ -83,10 +87,23 @@ class Job {
     // Set once the Job is added to the JobQueue.
     this.id = id || null;
     this.queued = false;
-    this.status = 'unqueued';
+    this.status = 'pending';
     this.progress = -1;
     this.outputPath = null;
     this.outputFile = null;
+  }
+
+  static fromStoredState(job){
+    let self = new Job(job.details);
+
+    self.id = job.id;
+    self.queued = job.queued;
+    self.status = job.status;
+    self.progress = job.progress;
+    self.outputPath = job.outputPath;
+    self.outputFile = job.outputFile;
+
+    return self;
   }
 
   prepareForQueue(id){
@@ -116,6 +133,15 @@ class Job {
       this.log(`Could not set outputPath after completing job for`, job.id, `error:`, e);
     }
 
+    // Attempt to write jobDetail file to .temp folder.
+    try {
+      let tempFolder = path.resolve(this.outputPath, '.temp');
+      this.commitStateToFile(tempFolder);
+      this.log(`Committed`, this.id, `to file in`, tempFolder);
+    } catch (e){
+      this.log(`Could not write completed jobDetail file to`, this.outputPath)
+    }
+
   }
 
   prepareForFailure(e){
@@ -138,6 +164,11 @@ class Job {
     // Read the file from the output directory.
     return fs.readFileSync(this.outputPath);
 
+  }
+
+  commitStateToFile(path){
+    let filename = `${this.id}_jobDetail.json`;
+    return fs.writeFileSync(this.truncatedBuffers(), filename);
   }
 
   truncatedBuffers(){
@@ -167,22 +198,56 @@ class Job {
 class JobQueue {
 
   constructor(jobs){
-    this.pending = [];
-    this.active = [];
-    this.completed = [];
-    this.failed = [];
 
-    if (jobs) this.pending = this.pending.concat(jobs);
+    this._all = [];
+    if (jobs) this.all = this.all.concat(jobs);
+
+    this.retrieveFromStorage(autorender.OUTPUT_PATH);
   }
 
-  all(){
-    return this.pending.concat(this.active).concat(this.completed).concat(this.failed);
+  get pending(){
+    return [].concat(this.all.filter(job => job.status === 'pending'));
+  }
+
+  get rendering(){
+    return [].concat(this.all.filter(job => job.status === 'rendering'));
+  }
+
+  get completed(){
+    return [].concat(this.all.filter(job => job.status === 'completed'));
+  }
+
+  get failed(){
+    return [].concat(this.all.filter(job => job.status === 'failed'));
+  }
+
+  get all(){
+    this.retrieveFromStorage(autorender.OUTPUT_PATH);
+    return this._all;
+  }
+
+  // Retrieves job details from persistent storage (e.g. completed jobs that are
+  // no longer held in memory) and merges them with the existing jobs held in memory.
+  retrieveFromStorage(outputPath){
+    // Retrieve all jobDetail json files.
+    glob.sync(`${path.resolve(outputPath)}/*/.temp/*_jobDetail.json`)
+    .forEach(jobDetailPath => {
+      let jobJson = JSON.parse(fs.readFileSync(jobDetailPath));
+      let storedJob = Job.fromStoredState(jobJson);
+
+      // Add to the correct queue if it doesn't already exist.
+      if (this._all.filter(job => job.id === storedJob.id).length > 0) return;
+      this._all.push(storedJob);
+    });
   }
 
   enqueue(job){
 
+    if (this.all.filter(queuedJob => queuedJob.id == job.id).length >0)
+    return this.log(`Attempted to queue job`, job.id, `which was already in queue.`);
+
     job = job.prepareForQueue();
-    this.pending.push(job);
+    this._all.push(job);
 
     this.log(`Added`, job.id, `to the queue.`);
 
@@ -194,11 +259,10 @@ class JobQueue {
     // Check if there is anything to add in the queue.
     if (this.pending.length === 0) return null;
 
-    let job = this.pending.shift();
+    let job = this.pending[0];
     job = job.prepareForDequeue();
-    this.active.push(job);
 
-    this.log(`Dequeueing`, job.id, `and moving to active queue [${this.active.length}]`);
+    this.log(`Dequeueing`, job.id, `and moving to rendering queue [${this.rendering.length}]`);
 
     return job;
   }
@@ -209,10 +273,7 @@ class JobQueue {
     if (!jobToRemove) return false;
 
 
-    this.active = this.active.filter(job => job.id !== id);
-    this.pending = this.pending.filter(job => job.id !== id);
-    this.completed = this.completed.filter(job => job.id !== id);
-    this.failed = this.failed.filter(job => job.id !== id);
+    this._all = this._all.filter(job => job.id !== id);
 
     this.log(`Removed`, id, `from`, this.status, `queue.`);
 
@@ -224,14 +285,9 @@ class JobQueue {
 
     this.log(`Moving`, job.id, `to completed queue.`);
 
-    if (this.active.filter(activeJob => activeJob.id === job.id).length !== 1)
-      return this.log(`Job`,job.id, `not found in active queue.`);
+    if (this.job.status === 'completed') return;
 
-    // Find the job in the queue, and move it.
-    this.active = this.active.filter(activeJob => activeJob.id !== job.id);
-
-    // Place the job in the 'completed' queue.
-    this.completed.push(job);
+    job.prepareForCompletion();
 
   }
 
@@ -239,18 +295,13 @@ class JobQueue {
 
     this.log(`Moving`, job.id, `to failed queue.`);
 
-    if (this.active.filter(activeJob => activeJob.id === job.id).length !== 1)
-      return this.log(`Job`,job.id, `not found in active queue.`);
+    if (this.job.status === 'failed') return;
 
-    // Find the job in the queue, and move it.
-    this.active = this.active.filter(job => job.id !== job.id);
-
-    // Place the job in the 'completed' queue.
-    this.failed.push(job);
+    job.prepareForFailure();
   }
 
   getJobById(id){
-    let matches = this.all().filter(job => job.id === id);
+    let matches = this.all.filter(job => job.id === id);
 
     return matches.length > 0 ? matches[0] : null;
   }
