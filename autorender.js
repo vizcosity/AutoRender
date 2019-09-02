@@ -113,6 +113,21 @@ const configureDirectoryStructure = (outputPath, projectName) => new Promise((re
   });
 });
 
+const configureDirectoryStructureSync = (outputPath, projectName) => {
+
+  // Set the new OUTPUT_PATH.
+  if (outputPath) OUTPUT_PATH = path.resolve(__dirname, outputPath);
+
+  let tempDir = path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp');
+
+  log(`Creating temporary directory structure in`, tempDir);
+
+  mkdirp.sync(tempDir);
+  
+  return tempDir;
+
+};
+
 // Configure settings.
 const settings = nexrender.init({
     logger: console,
@@ -120,46 +135,43 @@ const settings = nexrender.init({
 
 module.exports = {
   // TODO: Add support for a callback function whic is called everytime the render progress changes, so that the Job object progress property can be updated.
-  render: function (params){
-    return new Promise(async (resolve, reject) => {
+  render: async function (params){
 
-      var {
-        outputPath,
-        songDetails
-      } = params;
+        var {
+          outputPath,
+          songDetails
+        } = params;
 
-      var { projectName, songName, artistName, genre, visualizerColour } = songDetails;
+        var { projectName, songName, artistName, genre, visualizerColour } = songDetails;
 
-      log(`Recieved request to render with params:`, params, `and details`, songDetails);
+        log(`Recieved request to render with params:`, params, `and details`, songDetails);
 
-      if (!projectName) return reject("Project name not supplied.");
-      if (!songName || !artistName || !genre || !visualizerColour)
-        return reject("Incomplete song details. Required: songName, artistName, genre, visualizerColour");
+        if (!projectName) return reject("Project name not supplied.");
+        if (!songName || !artistName || !genre || !visualizerColour)
+          return reject("Incomplete song details. Required: songName, artistName, genre, visualizerColour");
 
-      log(`Configuring directory structure.`);
-      let tempDir = await configureDirectoryStructure(outputPath, projectName);
-      log(`Configured directory structure:`, fs.readdirSync(OUTPUT_PATH));
+        log(`Configuring directory structure.`);
+        let tempDir = await configureDirectoryStructure(outputPath, projectName);
+        log(`Configured directory structure:`, fs.readdirSync(path.resolve(OUTPUT_PATH, projectName)));
 
-      log(`Configuring script template.`);
-      const projectScriptPath = await configureScriptTemplate(params, tempDir);
-      log(`Saved + written script template.`);
+        log(`Configuring script template.`);
+        const projectScriptPath = await configureScriptTemplate(params, tempDir);
+        log(`Saved + written script template.`);
 
-      log(`Configuring jobJson`);
-      const jobJson = configureJobTemplate(jobTemplate, projectScriptPath,tempDir, params.songDetails);
-      log(`Configured jobJson:`, jobJson);
-      fs.writeFileSync(path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
+        log(`Configuring jobJson`);
+        const jobJson = configureJobTemplate(jobTemplate, projectScriptPath,tempDir, params.songDetails);
+        log(`Configured jobJson:`, jobJson);
+        fs.writeFileSync(path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
 
-      log(`Attempting to render now.`);
-      try {
+        log(`Attempting to render now.`);
         const renderJob = await nexrender.render(jobJson, settings);
         // TODO: Add cleanup operation.
+        log(`Finished rendering`, renderJob);
 
-        return resolve(renderJob);
-      } catch(e){ return reject(e) }
-      log(`Finished rendering`, renderJob);
-
-    });
+        return renderJob;
   },
+  configureDirectoryStructure,
+  configureDirectoryStructureSync,
   OUTPUT_PATH
 }
 

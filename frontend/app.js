@@ -14,7 +14,7 @@ const path = require('path');
 dotenv.config()
 
 const _PORT = process.env.PORT || 4070;
-const _AUTORENDER_API_ENDPOINT = process.env.AUTORENDER_API_ENDPOINT;
+const _AUTORENDER_API_ENDPOINT = !process.env.development ? process.env.AUTORENDER_API_ENDPOINT : "http://localhost:3000";
 
 if (!_AUTORENDER_API_ENDPOINT) throw new Error("AutoRender API endpoint not set.");
 
@@ -29,7 +29,7 @@ if (!process.env.DEVELOPMENT){
     return next();
   });
 
-}
+} else log(`Running in development mode on endpoint`, _AUTORENDER_API_ENDPOINT);
 
 app.use(proxy(_AUTORENDER_API_ENDPOINT, {
   limit: '500mb'

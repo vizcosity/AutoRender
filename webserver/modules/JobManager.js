@@ -18,7 +18,7 @@ const datauri = new Datauri();
 
 
 // Defaults / constants
-const _POLLING_RATE = 1000 * 30; // 30 seconds.
+const _POLLING_RATE = process.env.POLLING_RATE || (1000 * 30); // 30 seconds.
 
 /**
  * The JobDetail class captures all the informatin necessary to perform a render,
@@ -91,17 +91,36 @@ class Job {
     this.progress = -1;
     this.outputPath = null;
     this.outputFile = null;
+    this.pathToSelf = null;
+    this.failureReason = null;
+
+    // Set timing information. When the state changes, the timing object is updated
+    // as soon as the state is changed. To see when a certain state change took effect,
+    // this would be accessed as this.timing[state].
+    this.timing = {
+      created: new Date(),
+    }
   }
 
   static fromStoredState(job){
     let self = new Job(job.details);
 
-    self.id = job.id;
-    self.queued = job.queued;
-    self.status = job.status;
-    self.progress = job.progress;
-    self.outputPath = job.outputPath;
-    self.outputFile = job.outputFile;
+    // self.id = job.id;
+    // self.queued = job.queued;
+    // self.status = job.status;
+    // self.progress = job.progress;
+    // self.outputPath = job.outputPath;
+    // self.outputFile = job.outputFile;
+    // self.pathToSelf = job.pathToSelf;
+    // self.failureReason = job.failureReason;
+    // self.timing = job.timing;
+
+    // Ensure we are not leaving out any lingering properties.
+    Object.keys(job).filter(key => key !== 'details').forEach(
+      additionalKey => {
+        self[additionalKey] = job[additionalKey];
+      }
+    )
 
     return self;
   }
@@ -124,8 +143,7 @@ class Job {
     return this;
   }
 
-  prepareForCompletion(autorenderCompletionDetail){
-    this.setStatus('completed');
+  prepareForCompletion(autorenderCompletionDetail, doNotCommit){
 
     try {
       this.outputPath = autorenderCompletionDetail.actions.postrender[0].output;
@@ -134,23 +152,69 @@ class Job {
     }
 
     // Attempt to write jobDetail file to .temp folder.
-    try {
-      let tempFolder = path.resolve(this.outputPath, '.temp');
-      this.commitStateToFile(tempFolder);
-      this.log(`Committed`, this.id, `to file in`, tempFolder);
-    } catch (e){
-      this.log(`Could not write completed jobDetail file to`, this.outputPath)
-    }
+    // try {
+    //   let tempFolder = path.resolve(this.outputPath, '.temp');
+    //   this.commitStateToFile(tempFolder);
+    //   this.log(`Committed`, this.id, `to file in`, tempFolder);
+    // } catch (e){
+    //   this.log(`Could not write completed jobDetail file to`, this.outputPath)
+    // }
+
+    // Set the 'pathToSelf' attribute so that the stateChange is written to disk,
+    // and we can subsequently remove self from the queue it belongs to.
+    if (!doNotCommit) this.setPathToSelf();
+
+    this.setStatus('completed');
 
   }
 
-  prepareForFailure(e){
-    this.setStatus('failed');
+  prepareForFailure(e, doNotCommit){
+
+
+    // Set the 'pathToSelf' attribute so that the stateChange is written to disk,
+    // and we can subsequently remove self from the queue it belongs to.
+    if (!doNotCommit) this.setPathToSelf();
+
     this.failureReason = e;
+    this.setStatus('failed');
+  }
+
+  setPathToSelf(){
+      // Do not set pathToSelf if it has already been set.
+      if (this.pathToSelf) return;
+
+      // Remember that the outputPath contains the actual render. We must go up a level.
+      if (this.outputPath){
+        let fullWritePath = path.resolve(this.outputPath, '../', '.temp', `${this.details.projectName}_jobDetail.json`);
+        this.pathToSelf = fullWritePath;
+      } else {
+        // Construct the output path using the default autorender output path.
+        let outputDir = autorender.configureDirectoryStructureSync(autorender.OUTPUT_PATH, this.details.projectName);
+        this.log(`Obtanied outputDir`, outputDir);
+        let fullWritePath = path.resolve(outputDir, `${this.details.projectName}_jobDetail.json`);
+        this.pathToSelf = fullWritePath;
+      }
+
+      this.log(`Set pathToSelf as`, this.pathToSelf);
   }
 
   setStatus(newStatus){
+
+    log(`Setting status with pathToSelf`, this.pathToSelf);
+
+    // Check if the job is in persistent storage. If so, we need to update the
+    // job in storage.
     this.status = newStatus;
+
+    if (this.pathToSelf) {
+        // Overwrite previous preferences by writing to the same path that the
+        // job itself exists at.
+        this.commitStateToFile(this.pathToSelf);
+    }
+
+    // Update the timing information.
+    this.timing[this.status] = new Date();
+
   }
 
   updateProgress(newProgress){
@@ -166,9 +230,18 @@ class Job {
 
   }
 
-  commitStateToFile(path){
-    let filename = `${this.id}_jobDetail.json`;
-    return fs.writeFileSync(this.truncatedBuffers(), filename);
+  commitStateToFile(dirPath){
+    let writePath = path.resolve(dirPath);
+    log(`Committing state of ${this.id} to path`, writePath);
+    return fs.writeFileSync(writePath, this.serialiseJob({truncateBuffers: true}));
+  }
+
+  serialiseJob({truncateBuffers}){
+    return JSON.stringify(
+      truncateBuffers ? this.truncatedBuffers() : this,
+      null,
+      2
+    );
   }
 
   truncatedBuffers(){
@@ -222,22 +295,26 @@ class JobQueue {
   }
 
   get all(){
-    this.retrieveFromStorage(autorender.OUTPUT_PATH);
-    return this._all;
+    // Concatenate at the point of retrieval so that we don't hold unnecesarily
+    // large volumes of legacy renders in memory all the time, and we can keep
+    // persistance.
+    return this._all.concat(this.retrieveFromStorage(autorender.OUTPUT_PATH));
   }
 
   // Retrieves job details from persistent storage (e.g. completed jobs that are
   // no longer held in memory) and merges them with the existing jobs held in memory.
-  retrieveFromStorage(outputPath){
+  retrieveFromStorage(outputPath, addToAllQueue){
     // Retrieve all jobDetail json files.
-    glob.sync(`${path.resolve(outputPath)}/*/.temp/*_jobDetail.json`)
-    .forEach(jobDetailPath => {
+    return glob.sync(`${path.resolve(outputPath)}/*/.temp/*_jobDetail.json`)
+    .map(jobDetailPath => {
       let jobJson = JSON.parse(fs.readFileSync(jobDetailPath));
       let storedJob = Job.fromStoredState(jobJson);
 
       // Add to the correct queue if it doesn't already exist.
-      if (this._all.filter(job => job.id === storedJob.id).length > 0) return;
-      this._all.push(storedJob);
+      if (addToAllQueue && this._all.filter(job => job.id === storedJob.id).length === 0)
+        this._all.push(storedJob);
+
+      return storedJob;
     });
   }
 
@@ -260,6 +337,7 @@ class JobQueue {
     if (this.pending.length === 0) return null;
 
     let job = this.pending[0];
+
     job = job.prepareForDequeue();
 
     this.log(`Dequeueing`, job.id, `and moving to rendering queue [${this.rendering.length}]`);
@@ -272,22 +350,25 @@ class JobQueue {
     let jobToRemove = this.getJobById(id);
     if (!jobToRemove) return false;
 
-
     this._all = this._all.filter(job => job.id !== id);
 
-    this.log(`Removed`, id, `from`, this.status, `queue.`);
+    this.log(`Removed`, id, `from`, jobToRemove.status, `queue.`);
+
+    this.cleanFromMemory();
 
     return jobToRemove;
 
   }
 
-  completeJob(job){
+  completeJob(job, doNotCommit){
 
     this.log(`Moving`, job.id, `to completed queue.`);
 
-    if (this.job.status === 'completed') return;
+    if (job.status === 'completed') return;
 
-    job.prepareForCompletion();
+    job.prepareForCompletion(doNotCommit);
+
+    this.cleanFromMemory();
 
   }
 
@@ -295,15 +376,26 @@ class JobQueue {
 
     this.log(`Moving`, job.id, `to failed queue.`);
 
-    if (this.job.status === 'failed') return;
+    if (job.status === 'failed') return;
 
     job.prepareForFailure();
+
+    this.cleanFromMemory();
+
   }
 
   getJobById(id){
     let matches = this.all.filter(job => job.id === id);
 
     return matches.length > 0 ? matches[0] : null;
+  }
+
+  // Removes jobs from memory that have a specified 'pathToSelf' attribute, indicating
+  // that they are being held in persistent storage.
+  cleanFromMemory(){
+    let numJobs = this._all.length;
+    this._all = this._all.filter(job => !job.pathToSelf);
+    log(`Cleaned [${numJobs - this._all.length}] jobs from memory.`);
   }
 
   log(...msg){
