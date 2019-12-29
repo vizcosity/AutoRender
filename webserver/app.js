@@ -16,6 +16,8 @@ const app = express();
 const package = require('./package.json');
 const endpointPrefix = `/api/v${package['api-version']}`;
 const { JobManager } = require('./modules/JobManager');
+const { readLog } = require('./modules/log');
+const winston = require('winston');
 
 // const upload = multer({
 //   dest: resolve(__dirname, "./.uploads"),
@@ -136,10 +138,34 @@ app.get(`${endpointPrefix}/jobs`, (req, res) => {
 
 });
 
+app.get(`${endpointPrefix}/logs`, (req, res) => {
+
+  // Read the last 100 lines from the log and display this.
+  readLog(req.body.lines).then(log => res.send({
+    success: true,
+    lines: log.split('\n').length,
+    log
+  }));
+  
+});
+
 app.listen(_PORT, () => log(`Listening on`,
 _PORT));
 
 // Logging.
+
+// Create the logger which will be used to output logs to the STDOUT stream
+// as well as a logfile.
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.simple(),
+  // defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({ filename: 'autorender.log' }),
+    new winston.transports.Console(),
+  ]
+});
+
 function log(...msg){
-  console.log(path.basename(__filename.split('.')[0]).toUpperCase(), '|', ...msg);
+  logger.info(`${path.basename(__filename.split('.')[0]).toUpperCase()} | ${msg.map(obj => require('util').inspect(obj)).join(' ')}`);
 }

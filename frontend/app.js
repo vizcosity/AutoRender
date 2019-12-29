@@ -38,6 +38,8 @@ app.use(proxy(_AUTORENDER_API_ENDPOINT, {
 app.listen(_PORT, () => log(`Listening on`,
 _PORT));
 
+log(`Using AutoRender API Endpoint:`, _AUTORENDER_API_ENDPOINT);
+
 // Logging.
 function log(...msg){
   console.log(path.basename(__filename.split('.')[0]).toUpperCase(), '|', ...msg);

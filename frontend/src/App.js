@@ -4,6 +4,7 @@ import Landing from './Landing';
 import NewRenderJob from './NewRenderJob';
 import ManageJobs from './ManageJobs';
 import Footer from './Footer';
+import Log from './Log';
 import { Route, BrowserRouter as Router } from 'react-router-dom';
 import { grommet } from 'grommet/themes';
 
@@ -37,6 +38,7 @@ function App() {
         <Route exact path="/newRenderJob" component={() => <NewRenderJob />} />
         <Route exact path="/manageJobs" component={() => <ManageJobs />} />
       </Router>
+      <Log />
       <Footer />
     </Box>
     </Grommet>

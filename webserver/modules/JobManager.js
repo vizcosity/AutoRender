@@ -12,6 +12,7 @@ const autorender = require(path.resolve(__dirname, '../../autorender'));
 const Datauri = require('datauri');
 const fileType = require('file-type');
 const moment = require('moment');
+const winston = require('winston');
 
 const datauri = new Datauri();
 
@@ -560,6 +561,19 @@ module.exports = {
   Job
 }
 
+
+// Create the logger which will be used to output logs to the STDOUT stream
+// as well as a logfile.
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.simple(),
+  // defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({ filename: 'autorender.log' }),
+    new winston.transports.Console(),
+  ]
+});
+
 function log(...msg) {
-  console.log(moment().format("HH:MM"),`JOB MANAGER`, ...msg);
+  logger.info(`${moment().format("HH:MM")} JOB MANAGER ${msg.map(obj => require('util').inspect(obj)).join(' ')}`);
 }
