@@ -42,5 +42,5 @@ log(`Using AutoRender API Endpoint:`, _AUTORENDER_API_ENDPOINT);
 
 // Logging.
 function log(...msg){
-  console.log(path.basename(__filename.split('.')[0]).toUpperCase(), '|', ...msg);
+  console.log(`FRONTEND APP`, '|', ...msg);
 }

@@ -167,5 +167,5 @@ const logger = winston.createLogger({
 });
 
 function log(...msg){
-  logger.info(`${path.basename(__filename.split('.')[0]).toUpperCase()} | ${msg.map(obj => require('util').inspect(obj)).join(' ')}`);
+  logger.info(`WEBSERVER APP | ${msg.map(obj => require('util').inspect(obj)).join(' ')}`);
 }

@@ -13,6 +13,10 @@
   max-height: 100px;
   overflow-y: scroll;
 
+  /* Enable always-sroll-to-bottom. */
+  display: flex;
+  flex-direction: column-reverse;
+
 }
 
 .log-and-text-container {

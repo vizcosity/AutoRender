@@ -495,7 +495,7 @@ class JobWorker {
         return clearInterval(this.listenerProcess);
       }
 
-      self.log(`Checking for jobs.`);
+      // self.log(`Checking for jobs.`);
 
       // Pull latest job from the queue.
       var job = self.queue.dequeue();

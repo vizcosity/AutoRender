@@ -11,12 +11,9 @@ const { copyFileAndReturnFileURI } = require('./modules/resolveData');
 const winston = require('winston');
 require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
-var nexrenderTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
-
 const DEFAULT_AE_TEMPLATE_PATH = `./assets/STM_TEMPLATE_AUTORENDER_BUNDLED/`;
 const DEFAULT_AE_AUTORENDER_SCRIPT_PATH = './scripts/stm_autorender_trapcode_15.jsx';
 const DEFAULT_OUTPUT_PATH = './.output/';
-
 
 var AE_TEMPLATE_PATH = (process.env.AE_TEMPLATE_PATH ? process.env.AE_TEMPLATE_PATH : DEFAULT_AE_TEMPLATE_PATH);
 AE_TEMPLATE_PATH += `STM_TEMPLATE_AUTORENDER_TRAPCODE_15_NO_PSD_${process.platform === 'win32' ? 'WIN' : 'MAC'}.aep`;
@@ -27,8 +24,21 @@ var AE_AUTORENDER_SCRIPT_PATH = process.env.AE_AUTORENDER_SCRIPT_PATH ? process.
 var AE_AUTORENDER_SCRIPT_URL = `file://${path.resolve(__dirname, AE_AUTORENDER_SCRIPT_PATH)}`;
 
 var OUTPUT_PATH = path.resolve(__dirname, process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH : DEFAULT_OUTPUT_PATH);
+const WORKDIR_PATH = path.resolve(__dirname, OUTPUT_PATH, `.nexrender`);
 
 const jobTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
+
+// Create the logger which will be used to output logs to the STDOUT stream
+// as well as a logfile.
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.simple(),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({ filename: 'autorender.log' }),
+    new winston.transports.Console(),
+  ]
+});
 
 // Configure the template by replacing placeholders with the script and asset paths.
 const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectName, songFile, backgroundFile, artworkFile, outputPath}) => {
@@ -97,7 +107,7 @@ const configureScriptTemplate = (projectDetails, tempDir) => new Promise((resolv
 });
 
 // Configures the directory structure by creating the project folder and temp folders.
-const configureDirectoryStructure = (outputPath, projectName) => new Promise((resolve, reject) => {
+const configureDirectoryStructure = ({outputPath, projectName}) => new Promise((resolve, reject) => {
 
   // Set the new OUTPUT_PATH.
   if (outputPath) OUTPUT_PATH = path.resolve(__dirname, outputPath);
@@ -127,9 +137,15 @@ const configureDirectoryStructureSync = (outputPath, projectName) => {
 
 };
 
+// Ensure that the workpath has been created, if it does not exist already.
+log(`Ensuring that the output path`, WORKDIR_PATH, `exists.`);
+mkdirp.sync(WORKDIR_PATH);
+
 // Configure settings.
 const settings = nexrender.init({
     logger: console,
+    workpath: OUTPUT_PATH,
+    binary: process.env.BINARY
 });
 
 module.exports = {
@@ -150,7 +166,7 @@ module.exports = {
           return reject("Incomplete song details. Required: songName, artistName, genre, visualizerColour");
 
         log(`Configuring directory structure.`);
-        let tempDir = await configureDirectoryStructure(outputPath, projectName);
+        let tempDir = await configureDirectoryStructure({outputPath, projectName});
         log(`Configured directory structure:`, fs.readdirSync(path.resolve(OUTPUT_PATH, projectName)));
 
         log(`Configuring script template.`);
@@ -173,18 +189,6 @@ module.exports = {
   configureDirectoryStructureSync,
   OUTPUT_PATH
 }
-
-// Create the logger which will be used to output logs to the STDOUT stream
-// as well as a logfile.
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.simple(),
-  defaultMeta: { service: 'user-service' },
-  transports: [
-    new winston.transports.File({ filename: 'autorender.log' }),
-    new winston.transports.Console(),
-  ]
-});
 
 function log(...msg){
   logger.info(`AUTORENDER | ${msg.map(obj => require('util').inspect(obj)).join(' ')}`);
