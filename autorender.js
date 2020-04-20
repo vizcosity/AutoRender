@@ -11,6 +11,19 @@ const { copyFileAndReturnFileURI } = require('./modules/resolveData');
 const winston = require('winston');
 require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
+
+// Create the logger which will be used to output logs to the STDOUT stream
+// as well as a logfile.
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.simple(),
+  transports: [
+    new winston.transports.File({ filename: 'autorender.log' }),
+    new winston.transports.Console(),
+  ]
+});
+
+const _PLATFORM = determinePlatform();
 const DEFAULT_AE_TEMPLATE_PATH = `./assets/STM_TEMPLATE_AUTORENDER_BUNDLED/`;
 const DEFAULT_AE_AUTORENDER_SCRIPT_PATH = './scripts/stm_autorender_trapcode_15.jsx';
 const DEFAULT_OUTPUT_PATH = './.output/';
@@ -26,24 +39,16 @@ var AE_AUTORENDER_SCRIPT_URL = `file://${path.resolve(__dirname, AE_AUTORENDER_S
 var OUTPUT_PATH = path.resolve(__dirname, process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH : DEFAULT_OUTPUT_PATH);
 const WORKDIR_PATH = path.resolve(__dirname, OUTPUT_PATH, `.nexrender`);
 
-const jobTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
-
-// Create the logger which will be used to output logs to the STDOUT stream
-// as well as a logfile.
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.simple(),
-  defaultMeta: { service: 'user-service' },
-  transports: [
-    new winston.transports.File({ filename: 'autorender.log' }),
-    new winston.transports.Console(),
-  ]
-});
+const jobTemplate = require(path.resolve(__dirname, `./nexrender_templates/nexrender_template_lossless_${_PLATFORM}.json`));
 
 // Configure the template by replacing placeholders with the script and asset paths.
 const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectName, songFile, backgroundFile, artworkFile, outputPath}) => {
 
   var jobJson = { ...jobTemplate };
+
+  let fileExtension = jobJson.template.outputExt;
+
+  if (!fileExtension) throw new Error("Could not determine file extension in job template.", jobJson);
 
   jobJson.template.src = AE_TEMPLATE_URL;
 
@@ -82,7 +87,7 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectN
     src: `file://${path.resolve(projectScriptPath)}`
   });
 
-  jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
+  jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.${fileExtension}`;
 
 
   return jobJson;
@@ -141,6 +146,8 @@ const configureDirectoryStructureSync = (outputPath, projectName) => {
 log(`Ensuring that the output path`, WORKDIR_PATH, `exists.`);
 mkdirp.sync(WORKDIR_PATH);
 
+log(`Platform:`, _PLATFORM);
+
 // Configure settings.
 const settings = nexrender.init({
     logger: console,
@@ -192,4 +199,17 @@ module.exports = {
 
 function log(...msg){
   logger.info(`AUTORENDER | ${msg.map(obj => require('util').inspect(obj)).join(' ')}`);
+}
+
+function determinePlatform(){
+  let platform = require('os').platform();
+  switch (platform) {
+    case 'darwin': 
+      return 'mac';
+    case 'win32':
+      return 'windows';
+    default: 
+      throw new Error("Unsupported platform: " + platform);
+  }
+
 }

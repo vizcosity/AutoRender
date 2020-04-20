@@ -1,0 +1,17 @@
+{
+  "template": {
+    "composition": "Render 1080p [Change length]",
+    "src": "DECLARE AE_TEMPLATE_PATH IN opts.env FILE",
+    "outputModule": "Lossless",
+    "outputExt": "mov"
+  },
+  "assets": [],
+  "actions": {
+        "postrender": [
+            {
+                "module": "@nexrender/action-copy",
+                "output": "DECLARE OUTPUT FOLDER IN opts.env FILE"
+            }
+        ]
+    }
+}
