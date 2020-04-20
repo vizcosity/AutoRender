@@ -6,3 +6,4 @@ private/
 *.env
 .DS_Store
 *.log
+.nexrender-output/
