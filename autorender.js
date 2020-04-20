@@ -144,7 +144,7 @@ mkdirp.sync(WORKDIR_PATH);
 // Configure settings.
 const settings = nexrender.init({
     logger: console,
-    workpath: OUTPUT_PATH,
+    workpath: WORKDIR_PATH,
     binary: process.env.BINARY
 });
 
