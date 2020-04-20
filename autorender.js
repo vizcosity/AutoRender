@@ -84,6 +84,11 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectN
 
   jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
 
+  // Log to console when the render progress changes. (TEMP) - Ensure that we attach this to the specific job in the future.
+  jobJson.onRenderProgress = function(progress){
+    log(projectName, `Render progress:`, progress);
+  }
+
 
   return jobJson;
 };
