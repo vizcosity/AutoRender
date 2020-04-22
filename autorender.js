@@ -148,11 +148,16 @@ mkdirp.sync(WORKDIR_PATH);
 
 log(`Platform:`, _PLATFORM);
 
+log(`Binary:`, process.env.BINARY || "unspecified.");
+
+log(`Skip Cleanup:`, process.env.SKIP_CLEANUP);
+
 // Configure settings.
 const settings = nexrender.init({
     logger: console,
     workpath: OUTPUT_PATH,
-    binary: process.env.BINARY
+    binary: process.env.BINARY,
+    skipCleanup: process.env.SKIP_CLEANUP
 });
 
 module.exports = {
