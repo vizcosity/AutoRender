@@ -5,11 +5,13 @@
   "main": "main.js",
   "scripts": {
     "start:local": "npm start & cd ./frontend && npm run start:local",
-    "start:local-mac": "BINARY=$(echo \"/Applications/Adobe After Effects CC 2019/aerender\") npm start & cd ./frontend && npm run start:local",
+    "start:local-mac": "SKIP_CLEANUP=true BINARY=$(echo \"/Applications/Adobe After Effects CC 2019/aerender\") npm start & cd ./frontend && npm run start:local",
     "start": "npm --prefix ./webserver start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test-render": "nexrender-cli --file testRender.json",
     "install": "node modules/nexrender-action-encode/link.js",
+    "tsc": "tsc",
+    "tsc:w": "tsc -w",
     "postinstall": "npm run install"
   },
   "repository": {
@@ -24,7 +26,7 @@
   "homepage": "https://github.com/vizcosity/AutoRender#readme",
   "dependencies": {
     "@nexrender/action-copy": "^1.5.7",
-    "@nexrender/action-encode": "^1.5.8",
+    "@nexrender/action-encode": "^1.12.6",
     "@nexrender/core": "^1.5.7",
     "cli": "^1.0.1",
     "datauri": "^2.0.0",
@@ -36,6 +38,7 @@
     "react-router-dom": "^5.0.1",
     "react-spinners": "^0.6.1",
     "rimraf": "^3.0.0",
+    "typescript": "^3.8.3",
     "winston": "^3.2.1"
   }
 }
