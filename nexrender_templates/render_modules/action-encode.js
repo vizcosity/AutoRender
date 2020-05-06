@@ -9,17 +9,19 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var _DEFAULT_OUTPUT_TEMPLATE = {
+var uuid = require('uuid-random');
+var path = require('path');
+var _DEFAULT_ACTION_ENCODE_TEMPLATE = {
     "module": "@nexrender/action-encode",
     "output": "foobar.mp4",
     "preset": "mp4",
     "params": { "-vcodec": "libx264", "-r": 25 }
 };
-var createAction = function (_a) {
-    var outputName = _a.outputName, _b = _a.preset, preset = _b === void 0 ? "mp4" : _b, _c = _a.framerate, framerate = _c === void 0 ? 29.97 : _c, params = _a.params;
-    return __assign(__assign({}, _DEFAULT_OUTPUT_TEMPLATE), { output: outputName, preset: preset, params: __assign(__assign(__assign({}, _DEFAULT_OUTPUT_TEMPLATE.params), { "-r": framerate }), params) });
+var createEncodeAction = function (_a) {
+    var _b = _a.outputName, outputName = _b === void 0 ? "untitled_output_" + uuid().split('-')[0] + ".mp4" : _b, _c = _a.preset, preset = _c === void 0 ? "mp4" : _c, _d = _a.framerate, framerate = _d === void 0 ? 29.97 : _d, params = _a.params;
+    return __assign(__assign({}, _DEFAULT_ACTION_ENCODE_TEMPLATE), { output: outputName + ".mp4", preset: preset, params: __assign(__assign(__assign({}, _DEFAULT_ACTION_ENCODE_TEMPLATE.params), { "-r": framerate }), params) });
 };
 module.exports = {
-    createAction: createAction
+    createEncodeAction: createEncodeAction
 };
 //# sourceMappingURL=action-encode.js.map

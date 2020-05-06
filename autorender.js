@@ -8,6 +8,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const ejs = require('ejs');
 const { copyFileAndReturnFileURI } = require('./modules/resolveData');
+const { createEncodeAction } = require('./nexrender_templates/render_modules/action-encode');
 const winston = require('winston');
 require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
@@ -42,9 +43,23 @@ const WORKDIR_PATH = path.resolve(__dirname, OUTPUT_PATH, `.nexrender`);
 const jobTemplate = require(path.resolve(__dirname, `./nexrender_templates/nexrender_template_lossless_${_PLATFORM}.json`));
 
 // Configure the template by replacing placeholders with the script and asset paths.
-const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectName, songFile, backgroundFile, artworkFile, outputPath}) => {
+const configureJobTemplate = ({
+  jobTemplate, 
+  projectScriptPath, 
+  tempDir, 
+  songDetails,
+  encodeOutputAsMP4 = true
+}) => {
 
   var jobJson = { ...jobTemplate };
+
+  let {
+    projectName, 
+    songFile, 
+    backgroundFile, 
+    artworkFile, 
+    outputPath
+  } = songDetails;
 
   let fileExtension = jobJson.template.outputExt;
 
@@ -87,8 +102,18 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectN
     src: `file://${path.resolve(projectScriptPath)}`
   });
 
-  jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.${fileExtension}`;
+  let outputNameWithoutExtension = `${OUTPUT_PATH}/${projectName}/${projectName}_render`;
 
+  let encodedOutputName = path.basename
+
+  // Add the action-copy postrender action.
+  jobJson.actions.postrender[0].output = `${outputNameWithoutExtension}.${fileExtension}`; 
+
+  // Add the action-encode postrender action, if specified.
+  if (encodeOutputAsMP4)
+    jobJson.actions.postrender.push(createEncodeAction({
+      outputName: outputNameWithoutExtension
+    }))
 
   return jobJson;
 };
@@ -186,7 +211,13 @@ module.exports = {
         log(`Saved + written script template.`);
 
         log(`Configuring jobJson`);
-        const jobJson = configureJobTemplate(jobTemplate, projectScriptPath,tempDir, params.songDetails);
+        const jobJson = configureJobTemplate({
+          jobTemplate,
+          projectScriptPath,
+          tempDir,
+          songDetails: params.songDetails
+        });
+        //const jobJson = configureJobTemplate(jobTemplate, projectScriptPath,tempDir, params.songDetails);
         log(`Configured jobJson:`, jobJson);
         fs.writeFileSync(path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
 
