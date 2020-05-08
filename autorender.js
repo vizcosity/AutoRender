@@ -8,9 +8,26 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const ejs = require('ejs');
 const { copyFileAndReturnFileURI } = require('./modules/resolveData');
+const { 
+  createCopyAction,
+  createEncodeAction
+ } = require('./nexrender_templates/render_modules/actions');
 const winston = require('winston');
 require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
+
+// Create the logger which will be used to output logs to the STDOUT stream
+// as well as a logfile.
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.simple(),
+  transports: [
+    new winston.transports.File({ filename: 'autorender.log' }),
+    new winston.transports.Console(),
+  ]
+});
+
+const _PLATFORM = determinePlatform();
 const DEFAULT_AE_TEMPLATE_PATH = `./assets/STM_TEMPLATE_AUTORENDER_BUNDLED/`;
 const DEFAULT_AE_AUTORENDER_SCRIPT_PATH = './scripts/stm_autorender_trapcode_15.jsx';
 const DEFAULT_OUTPUT_PATH = './.output/';
@@ -26,24 +43,31 @@ var AE_AUTORENDER_SCRIPT_URL = `file://${path.resolve(__dirname, AE_AUTORENDER_S
 var OUTPUT_PATH = path.resolve(__dirname, process.env.OUTPUT_PATH ? process.env.OUTPUT_PATH : DEFAULT_OUTPUT_PATH);
 const WORKDIR_PATH = path.resolve(__dirname, OUTPUT_PATH, `.nexrender`);
 
-const jobTemplate = require(path.resolve(__dirname, './nexrender_template.json'));
-
-// Create the logger which will be used to output logs to the STDOUT stream
-// as well as a logfile.
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.simple(),
-  defaultMeta: { service: 'user-service' },
-  transports: [
-    new winston.transports.File({ filename: 'autorender.log' }),
-    new winston.transports.Console(),
-  ]
-});
+const jobTemplate = require(path.resolve(__dirname, `./nexrender_templates/nexrender_template_lossless_${_PLATFORM}.json`));
 
 // Configure the template by replacing placeholders with the script and asset paths.
-const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectName, songFile, backgroundFile, artworkFile, outputPath}) => {
+const configureJobTemplate = ({
+  jobTemplate, 
+  projectScriptPath, 
+  tempDir, 
+  songDetails,
+  encodeOutputAsMP4 = true,
+  copyOutput = false
+}) => {
 
   var jobJson = { ...jobTemplate };
+
+  let {
+    projectName, 
+    songFile, 
+    backgroundFile, 
+    artworkFile, 
+    outputPath
+  } = songDetails;
+
+  let fileExtension = jobJson.template.outputExt;
+
+  if (!fileExtension) throw new Error("Could not determine file extension in job template.", jobJson);
 
   jobJson.template.src = AE_TEMPLATE_URL;
 
@@ -82,13 +106,28 @@ const configureJobTemplate = (jobTemplate, projectScriptPath, tempDir, {projectN
     src: `file://${path.resolve(projectScriptPath)}`
   });
 
-  jobJson.actions.postrender[0].output = `${OUTPUT_PATH}/${projectName}/${projectName}_render.mp4`;
+  let outputNameWithoutExtension = `${OUTPUT_PATH}/${projectName}/${projectName}_render`;
+
+  let encodedOutputName = path.basename
+
+  // Add the action-copy postrender action.
+  // jobJson.actions.postrender[0].output = `${outputNameWithoutExtension}.${fileExtension}`; 
+
+  if (copyOutput)
+    jobJson.actions.postrender.push(createCopyAction({
+      outputName: `${outputNameWithoutExtension}.${fileExtension}`
+    }));
 
   // Log to console when the render progress changes. (TEMP) - Ensure that we attach this to the specific job in the future.
   jobJson.onRenderProgress = function(progress){
     log(projectName, `Render progress:`, progress);
   }
 
+  // Add the action-encode postrender action, if specified.
+  if (encodeOutputAsMP4)
+    jobJson.actions.postrender.push(createEncodeAction({
+      outputName: outputNameWithoutExtension
+    }));
 
   return jobJson;
 };
@@ -146,11 +185,18 @@ const configureDirectoryStructureSync = (outputPath, projectName) => {
 log(`Ensuring that the output path`, WORKDIR_PATH, `exists.`);
 mkdirp.sync(WORKDIR_PATH);
 
+log(`Platform:`, _PLATFORM);
+
+log(`Binary:`, process.env.BINARY || "unspecified.");
+
+log(`Skip Cleanup:`, process.env.SKIP_CLEANUP);
+
 // Configure settings.
 const settings = nexrender.init({
     logger: console,
     workpath: WORKDIR_PATH,
-    binary: process.env.BINARY
+    binary: process.env.BINARY,
+    skipCleanup: process.env.SKIP_CLEANUP
 });
 
 module.exports = {
@@ -179,7 +225,13 @@ module.exports = {
         log(`Saved + written script template.`);
 
         log(`Configuring jobJson`);
-        const jobJson = configureJobTemplate(jobTemplate, projectScriptPath,tempDir, params.songDetails);
+        const jobJson = configureJobTemplate({
+          jobTemplate,
+          projectScriptPath,
+          tempDir,
+          songDetails: params.songDetails
+        });
+        //const jobJson = configureJobTemplate(jobTemplate, projectScriptPath,tempDir, params.songDetails);
         log(`Configured jobJson:`, jobJson);
         fs.writeFileSync(path.resolve(__dirname, OUTPUT_PATH, projectName, '.temp', 'jobJson.json'), JSON.stringify(jobJson, null, 2));
 
@@ -197,4 +249,17 @@ module.exports = {
 
 function log(...msg){
   logger.info(`AUTORENDER | ${msg.map(obj => require('util').inspect(obj)).join(' ')}`);
+}
+
+function determinePlatform(){
+  let platform = require('os').platform();
+  switch (platform) {
+    case 'darwin': 
+      return 'mac';
+    case 'win32':
+      return 'windows';
+    default: 
+      throw new Error("Unsupported platform: " + platform);
+  }
+
 }
