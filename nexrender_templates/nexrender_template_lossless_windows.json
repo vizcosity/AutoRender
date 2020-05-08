@@ -1,0 +1,13 @@
+{
+  "template": {
+    "composition": "Render 1080p [Change length]",
+    "src": "DECLARE AE_TEMPLATE_PATH IN opts.env FILE",
+    "outputModule": "Lossless",
+    "outputExt": "avi"
+  },
+  "assets": [],
+  "actions": {
+        "postrender": [
+        ]
+    }
+}
