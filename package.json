@@ -12,8 +12,7 @@
     "test-render": "nexrender-cli --file testRender.json",
     "install": "node modules/nexrender-action-encode/link.js",
     "tsc": "tsc",
-    "tsc:w": "tsc -w",
-    "postinstall": "npm run install"
+    "tsc:w": "tsc -w"
   },
   "repository": {
     "type": "git",
