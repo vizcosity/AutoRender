@@ -9,6 +9,22 @@ const _DEFAULT_ACTION_ENCODE_TEMPLATE = {
     "params": {"-vcodec": "libx264", "-r": 25}
 };
 
+const _DEFAULT_ACTION_COPY_TEMPLATE = {
+    "module": "@nexrender/action-copy",
+    "output": "foo.bar"
+}
+
+const createCopyAction = ({
+    outputName="untitled_output_"+uuid().split('-')[0]+".mp4",
+}: {
+    outputName: string
+}) => {
+    return {
+        ..._DEFAULT_ACTION_COPY_TEMPLATE,
+        output: outputName
+    }
+}
+
 const createEncodeAction = (
     {
         outputName="untitled_output_"+uuid().split('-')[0]+".mp4", 
@@ -35,5 +51,6 @@ const createEncodeAction = (
 };
 
 module.exports = {
+    createCopyAction,
     createEncodeAction
 }
