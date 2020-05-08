@@ -8,7 +8,10 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const ejs = require('ejs');
 const { copyFileAndReturnFileURI } = require('./modules/resolveData');
-const { createEncodeAction } = require('./nexrender_templates/render_modules/action-encode');
+const { 
+  createCopyAction,
+  createEncodeAction
+ } = require('./nexrender_templates/render_modules/actions');
 const winston = require('winston');
 require('dotenv').config({path: path.resolve(__dirname, './private/opts.env')});
 
@@ -48,7 +51,8 @@ const configureJobTemplate = ({
   projectScriptPath, 
   tempDir, 
   songDetails,
-  encodeOutputAsMP4 = true
+  encodeOutputAsMP4 = true,
+  copyOutput = false
 }) => {
 
   var jobJson = { ...jobTemplate };
@@ -107,13 +111,18 @@ const configureJobTemplate = ({
   let encodedOutputName = path.basename
 
   // Add the action-copy postrender action.
-  jobJson.actions.postrender[0].output = `${outputNameWithoutExtension}.${fileExtension}`; 
+  // jobJson.actions.postrender[0].output = `${outputNameWithoutExtension}.${fileExtension}`; 
+
+  if (copyOutput)
+    jobJson.actions.postrender.push(createCopyAction({
+      outputName: `${outputNameWithoutExtension}.${fileExtension}`
+    }));
 
   // Add the action-encode postrender action, if specified.
   if (encodeOutputAsMP4)
     jobJson.actions.postrender.push(createEncodeAction({
       outputName: outputNameWithoutExtension
-    }))
+    }));
 
   return jobJson;
 };
