@@ -353,9 +353,11 @@ class JobQueue {
     if (!jobToRemove) return false;
 
     // Remove from storage if written to disk.
-    if (job.pathToSelf) {
-      this.log(`Removing job:`, id, `from disk.`);
-      let jobDirectory = path.dirname(job.outputPath);
+    // CHECKPOINT: For some reason, the path is null here.
+    if (jobToRemove.pathToSelf) {
+      log(`Removing job at path:`, jobToRemove.outputPath);
+      let jobDirectory = path.dirname(jobToRemove.outputPath);
+      this.log(`Removing job:`, id, `at path`, jobDirectory, `from disk.`);
       rmrf.sync(jobDirectory);
       this.log(`Removed`, jobDirectory, `from disk.`);
 
