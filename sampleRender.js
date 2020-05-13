@@ -20,7 +20,7 @@ const main = async () => {
   await autorender.render({
     songDetails: {
       projectName: 'myShortTest',
-      songFile: fs.readFileSync('./sampleProject/ShortSound.mp3'),
+      songFile: fs.readFileSync('./sampleProject/Breathless - Bloom.wav'),
       artworkFile: fs.readFileSync('sampleProject/SampleArtwork.png'),
       songName: 'Sad Machine',
       artistName: 'Tester',
