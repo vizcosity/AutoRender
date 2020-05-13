@@ -1,7 +1,15 @@
 import React, { Component } from 'react';
-import { getJobs, downloadJobResult } from './AutoRenderAPI';
+import {
+  getJobs,
+  downloadJobResult,
+  cancelOrDeleteJob
+} from './AutoRenderAPI';
 import { Fade } from 'react-reveal';
-import { Download } from 'grommet-icons';
+import {
+  Download,
+  Halt,
+  Trash
+} from 'grommet-icons';
 import {
   Grommet,
   Box,
@@ -51,6 +59,13 @@ const columns = [
     }
   },
   {
+    property: "progress",
+    header: "Progress",
+    render: item => {
+      return <Text color={'status-unknown'}>{`${item.progress}%`}</Text>
+    }
+  },
+  {
     property: "download",
     header: "Download",
     align: "center",
@@ -66,6 +81,27 @@ const columns = [
         disabled={item.status !== 'completed'}
       >
         <Download />
+      </Button>
+  },
+  {
+    property: "clean",
+    header: "Clean",
+    align: "center",
+    render: item =>
+      <Button
+        style={{
+          padding: '5px',
+          borderRadius: '5px'
+        }}
+        hoverIndicator={true}
+        as="a"
+        onClick={() => window.confirm("This will cancel the job. Are you sure?") ? cancelOrDeleteJob(item.id) : ""}
+        // href={item.status === 'completed' ? `/api/v1/jobResult?id=${item.id}` : null}
+      >
+        {
+          item.status === 'rendering' ? <Halt />
+          : <Trash />
+        }
       </Button>
   }
 ]

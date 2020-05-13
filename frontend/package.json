@@ -23,6 +23,7 @@
     "start": "node app.js",
     "start:local": "AUTORENDER_API_ENDPOINT=http://localhost:3000 node app.js",
     "dev": "DEVELOPMENT=true node app.js & react-scripts start",
+    "dev:local": "AUTORENDER_API_ENDPOINT=http://localhost:3000 npm run dev",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

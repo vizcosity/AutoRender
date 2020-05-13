@@ -7,6 +7,7 @@
 // Dependencies.
 const path = require('path');
 const fs = require('fs');
+const rmrf = require('rimraf');
 const glob = require('glob');
 const autorender = require(path.resolve(__dirname, '../../autorender'));
 const Datauri = require('datauri');
@@ -144,7 +145,7 @@ class Job {
     return this;
   }
 
-  prepareForCompletion(autorenderCompletionDetail, doNotCommit){
+  prepareForCompletion(autorenderCompletionDetail, commitToDisk = true){
 
     try {
       this.outputPath = autorenderCompletionDetail.actions.postrender[0].output;
@@ -163,7 +164,7 @@ class Job {
 
     // Set the 'pathToSelf' attribute so that the stateChange is written to disk,
     // and we can subsequently remove self from the queue it belongs to.
-    if (!doNotCommit) this.setPathToSelf();
+    if (commitToDisk) this.setPathToSelf();
 
     this.setStatus('completed');
 
@@ -351,6 +352,15 @@ class JobQueue {
     let jobToRemove = this.getJobById(id);
     if (!jobToRemove) return false;
 
+    // Remove from storage if written to disk.
+    if (job.pathToSelf) {
+      this.log(`Removing job:`, id, `from disk.`);
+      let jobDirectory = path.dirname(job.outputPath);
+      rmrf.sync(jobDirectory);
+      this.log(`Removed`, jobDirectory, `from disk.`);
+
+    }
+
     this._all = this._all.filter(job => job.id !== id);
 
     this.log(`Removed`, id, `from`, jobToRemove.status, `queue.`);
@@ -361,13 +371,13 @@ class JobQueue {
 
   }
 
-  completeJob(job, doNotCommit){
+  completeJob({job, result, commitToDisk=true}){
 
     this.log(`Moving`, job.id, `to completed queue.`);
 
     if (job.status === 'completed') return;
 
-    job.prepareForCompletion(doNotCommit);
+    job.prepareForCompletion(result, commitToDisk);
 
     this.cleanFromMemory();
 
@@ -395,6 +405,8 @@ class JobQueue {
   // that they are being held in persistent storage.
   cleanFromMemory(){
     let numJobs = this._all.length;
+    log(`Jobs in memory:`, this._all);
+    log(`Jobs with a 'pathToSelf attribute'`, this._all.filter(job => job.pathToSelf));
     this._all = this._all.filter(job => !job.pathToSelf);
     log(`Cleaned [${numJobs - this._all.length}] jobs from memory.`);
   }
@@ -514,16 +526,17 @@ class JobWorker {
       // possible parameters.
       autorender.render({
         projectName: job.details.projectName,
-        songDetails: job.details
+        songDetails: job.details,
+        renderProgressHandler: job.updateProgress
       }).then(result => {
 
         self.log(`Finished rendering`, job.id, `with result:`, result);
 
         // Mark the job as completed.
-        job.prepareForCompletion(result);
+        //job.prepareForCompletion(result);
 
         // Move the job from the active queue to the completed queue.
-        self.queue.completeJob(job);
+        self.queue.completeJob({job, result});
 
         // Resume listening for new jobs.
         self.listening = true;

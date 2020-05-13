@@ -52,7 +52,8 @@ const configureJobTemplate = ({
   tempDir,
   songDetails,
   encodeOutputAsMP4 = true,
-  copyOutput = false
+  copyOutput = false,
+  renderProgressHandler
 }) => {
 
   var jobJson = { ...jobTemplate };
@@ -121,6 +122,11 @@ const configureJobTemplate = ({
   // Log to console when the render progress changes. (TEMP) - Ensure that we attach this to the specific job in the future.
   jobJson.onRenderProgress = function(progress){
     log(projectName, `Render progress:`, progress.renderProgress);
+  }
+
+  jobJson.onRenderProgress = ({renderProgress}) => {
+    if (renderProgressHandler) renderProgressHandler(renderProgress);
+    log(projectName, `Render progress:`, renderProgress);
   }
 
   // Add the action-encode postrender action, if specified.
@@ -204,9 +210,14 @@ module.exports = {
   // TODO: Add support for a callback function whic is called everytime the render progress changes, so that the Job object progress property can be updated.
   render: async function (params){
 
+       // Ensure that we do not receive any destructuring errors on the last line
+       // if no renderProgressHandler fuction has been passed. 
+       if (!params.renderProgressHandler) params.renderProgressHandler = null;
+
         var {
           outputPath,
-          songDetails
+          songDetails,
+          renderProgressHandler
         } = params;
 
         var { projectName, songName, artistName, genre, visualizerColour } = songDetails;
@@ -230,7 +241,8 @@ module.exports = {
           jobTemplate,
           projectScriptPath,
           tempDir,
-          songDetails: params.songDetails
+          songDetails: params.songDetails,
+          renderProgressHandler
         });
         //const jobJson = configureJobTemplate(jobTemplate, projectScriptPath,tempDir, params.songDetails);
         log(`Configured jobJson:`, jobJson);

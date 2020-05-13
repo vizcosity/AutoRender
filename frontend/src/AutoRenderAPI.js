@@ -75,6 +75,18 @@ const downloadJobResult = ops => {
 
 }
 
+const cancelOrDeleteJob = async id => {
+  fetch('/api/v1/job', {
+    method: 'DELETE',
+    body: JSON.stringify({
+      id
+    }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
 const getLogs = async lines => {
   try {
     let result = await fetch('/api/v1/logs?lines='+lines, {
@@ -96,5 +108,6 @@ export {
   getJobs,
   getJobDetail,
   getLogs,
-  downloadJobResult
+  downloadJobResult,
+  cancelOrDeleteJob
 }
