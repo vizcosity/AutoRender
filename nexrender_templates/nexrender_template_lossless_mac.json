@@ -8,10 +8,6 @@
   "assets": [],
   "actions": {
         "postrender": [
-            {
-                "module": "@nexrender/action-copy",
-                "output": "DECLARE OUTPUT FOLDER IN opts.env FILE"
-            }
         ]
     }
 }

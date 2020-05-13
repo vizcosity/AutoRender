@@ -8,7 +8,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const ejs = require('ejs');
 const { copyFileAndReturnFileURI } = require('./modules/resolveData');
-const { 
+const {
   createCopyAction,
   createEncodeAction
  } = require('./nexrender_templates/render_modules/actions');
@@ -47,9 +47,9 @@ const jobTemplate = require(path.resolve(__dirname, `./nexrender_templates/nexre
 
 // Configure the template by replacing placeholders with the script and asset paths.
 const configureJobTemplate = ({
-  jobTemplate, 
-  projectScriptPath, 
-  tempDir, 
+  jobTemplate,
+  projectScriptPath,
+  tempDir,
   songDetails,
   encodeOutputAsMP4 = true,
   copyOutput = false
@@ -58,10 +58,10 @@ const configureJobTemplate = ({
   var jobJson = { ...jobTemplate };
 
   let {
-    projectName, 
-    songFile, 
-    backgroundFile, 
-    artworkFile, 
+    projectName,
+    songFile,
+    backgroundFile,
+    artworkFile,
     outputPath
   } = songDetails;
 
@@ -111,7 +111,7 @@ const configureJobTemplate = ({
   let encodedOutputName = path.basename
 
   // Add the action-copy postrender action.
-  // jobJson.actions.postrender[0].output = `${outputNameWithoutExtension}.${fileExtension}`; 
+  // jobJson.actions.postrender[0].output = `${outputNameWithoutExtension}.${fileExtension}`;
 
   if (copyOutput)
     jobJson.actions.postrender.push(createCopyAction({
@@ -120,7 +120,7 @@ const configureJobTemplate = ({
 
   // Log to console when the render progress changes. (TEMP) - Ensure that we attach this to the specific job in the future.
   jobJson.onRenderProgress = function(progress){
-    log(projectName, `Render progress:`, progress);
+    log(projectName, `Render progress:`, progress.renderProgress);
   }
 
   // Add the action-encode postrender action, if specified.
@@ -196,6 +196,7 @@ const settings = nexrender.init({
     logger: console,
     workpath: WORKDIR_PATH,
     binary: process.env.BINARY,
+    reuse: process.env.REUSE,
     skipCleanup: process.env.SKIP_CLEANUP
 });
 
@@ -254,11 +255,11 @@ function log(...msg){
 function determinePlatform(){
   let platform = require('os').platform();
   switch (platform) {
-    case 'darwin': 
+    case 'darwin':
       return 'mac';
     case 'win32':
       return 'windows';
-    default: 
+    default:
       throw new Error("Unsupported platform: " + platform);
   }
 

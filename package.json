@@ -7,6 +7,7 @@
     "start:local": "npm start & cd ./frontend && npm run start:local",
     "start:local-mac": "SKIP_CLEANUP=true BINARY=$(echo \"/Applications/Adobe After Effects CC 2019/aerender\") npm start & cd ./frontend && npm run start:local",
     "sampleRender:mac": "BINARY=$(echo \"/Applications/Adobe After Effects CC 2019/aerender\") node sampleRender.js",
+    "sampleRender:reuse": "cross-env REUSE=true node sampleRender.js",
     "start": "npm --prefix ./webserver start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test-render": "nexrender-cli --file testRender.json",
@@ -41,5 +42,8 @@
     "typescript": "^3.8.3",
     "uuid-random": "^1.3.0",
     "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2"
   }
 }
