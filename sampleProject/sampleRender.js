@@ -1,4 +1,4 @@
-var autorender = require('./autorender');
+var autorender = require('../autorender');
 var fs = require('fs');
 
 // const main = async () => {
@@ -20,7 +20,7 @@ const main = async () => {
   await autorender.render({
     songDetails: {
       projectName: 'myShortTest',
-      songFile: fs.readFileSync('./sampleProject/Breathless - Bloom.wav'),
+      songFile: fs.readFileSync('./sampleProject/ShortTrack.mp3'),
       artworkFile: fs.readFileSync('sampleProject/SampleArtwork.png'),
       songName: 'Sad Machine',
       artistName: 'Tester',

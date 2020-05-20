@@ -197,18 +197,19 @@ log(`Binary:`, process.env.BINARY || "unspecified.");
 
 log(`Skip Cleanup:`, process.env.SKIP_CLEANUP);
 
-// Configure settings.
-const settings = nexrender.init({
-    logger: console,
-    workpath: WORKDIR_PATH,
-    binary: process.env.BINARY,
-    reuse: process.env.REUSE,
-    skipCleanup: process.env.SKIP_CLEANUP
-});
-
 module.exports = {
   // TODO: Add support for a callback function whic is called everytime the render progress changes, so that the Job object progress property can be updated.
   render: async function (params){
+
+      // Configure settings.
+      const settings = nexrender.init({
+        logger: console,
+        workpath: WORKDIR_PATH,
+        binary: process.env.BINARY || params.binary,
+        reuse: process.env.REUSE || params.reuse,
+        skipCleanup: process.env.SKIP_CLEANUP || params.skipCleanup
+      });
+
 
        // Ensure that we do not receive any destructuring errors on the last line
        // if no renderProgressHandler fuction has been passed. 
@@ -226,7 +227,7 @@ module.exports = {
 
         if (!projectName) return reject("Project name not supplied.");
         if (!songName || !artistName || !genre || !visualizerColour)
-          return reject("Incomplete song details. Required: songName, artistName, genre, visualizerColour");
+          throw Error("Incomplete song details. Required: songName, artistName, genre, visualizerColour");
 
         log(`Configuring directory structure.`);
         let tempDir = await configureDirectoryStructure({outputPath, projectName});

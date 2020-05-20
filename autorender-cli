@@ -1,11 +1,53 @@
 #!/usr/bin/env node
 
 const cli = require('cli');
+const autorender = require('./autorender');
+const fs = require('fs');
+const path = require('path');
+
+const generateRandomProjectName = () => `project_${Math.random().toString(36).substring(2)}`;
 
 var args = cli.parse({
-    background: ['b', 'Template background image', 'file', false],
-    artwork: ['a', 'Song artwork image', 'file', false],
-    song: ['s', 'Song audio file', 'file', false],
+    "background-file": ['bg', 'Template background image', 'file', false],
+    "artwork-file": ['af', 'Song artwork image', 'file', false],
+    "song-file": ['sf', 'Song audio file', 'file', false],
+    "project-name": ['pn', 'Project name', 'string', generateRandomProjectName()],
+    "colour": ['c', 'Visualizer hex colour', 'string', '#FFEA32'],
+    "song-title": ['st', 'Song title: e.g. "Sad Machine"', 'string', "Song Title"],
+    "artist-name": ['an', 'Artist name: e.g. "Porter Robinson"', 'string', 'Artist Name'],
+    "genre": ['g', 'Song Genre: e.g. "Progressive House"', 'string', 'Genre'],
+    "reuse": ['r', 'Whether or not to re-use an existing instance of AE, or spawn a hidden process', 'boolean', false],
+    "skip-cleanup": ['sc', 'Skip removal temporary nexrender files when finished', 'boolean', false]
 });
 
-if (!args.song) return cli.error("Song file is required.");
+if (!args['song-file']) return cli.error("Song file is required.");
+if (!args['artwork-file']) return cli.error("Artwork file is required.");
+if (!args['background-file']) return cli.error("Template background image file is required.");
+
+if (args['song-title'] == "Song Title") cli.info("No Song Title passed. Using 'Song Title' as default.");
+if (args['artist-name'] == "Artist Name") cli.info("No Artist Name passed. Using 'Artist Name' as default.");
+if (args['genree'] == "Genre") cli.info("No Genre passed. Using 'Genre' as default.");
+if (args['colour'] == "#FFEA32") cli.info("No Colour passed. Using '#FFEA32' as default.");
+
+cli.ok('Passed args:')
+console.log(args)
+
+// Testing with buffers.
+const main = async () => {
+  await autorender.render({
+    songDetails: {
+      projectName: args['project-name'],
+      songFile: fs.readFileSync(path.resolve(args['song-file'])),
+      artworkFile: fs.readFileSync(path.resolve(args['artwork-file'])),
+      songName: args['song-title'],
+      artistName: args['artist-name'],
+      backgroundFile: fs.readFileSync(path.resolve(args['background-file'])),
+      genre: args['genre'],
+      visualizerColour: args['colour'],
+    },
+    reuse: args['reuse'],
+    skipCleanup: args['skip-cleanup']
+  });
+}
+
+main();
