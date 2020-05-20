@@ -30,84 +30,7 @@ const statusColourMap = {
   pending: 'status-unknown'
 };
 
-const columns = [
-  // {
-  //   property: "date",
-  //   header: "Date",
-  //   render: datum =>
-  //   datum.date && new Date(datum.date).toLocaleDateString("en-US"),
-  //   align: "end",
-  // },
-  {
-    property: "key",
-    header: "#",
-    render: item => <Text>{item.key}</Text>
-  }, {
-    property: "artistName",
-    header: "Artist",
-    render: item => <Text weight="bold">{item.artistName}</Text>
-  },
-  {
-    property: "songName",
-    header: "Song"
-  },
-  {
-    property: "status",
-    header: "Status",
-    render: item => {
-      return <Text color={statusColourMap[item.status]}>{item.status}</Text>
-    }
-  },
-  {
-    property: "progress",
-    header: "Progress",
-    render: item => {
-      return <Text color={'status-unknown'}>{`${item.progress}%`}</Text>
-    }
-  },
-  {
-    property: "download",
-    header: "Download",
-    align: "center",
-    render: item =>
-      <Button
-        style={{
-          padding: '5px',
-          borderRadius: '5px'
-        }}
-        hoverIndicator={true}
-        as="a"
-        href={item.status === 'completed' ? `/api/v1/jobResult?id=${item.id}` : null}
-        disabled={item.status !== 'completed'}
-      >
-        <Download />
-      </Button>
-  },
-  {
-    property: "clean",
-    header: "Clean",
-    align: "center",
-    render: item =>
-      <Button
-        style={{
-          padding: '5px',
-          borderRadius: '5px'
-        }}
-        hoverIndicator={true}
-        as="a"
-        onClick={() => window.confirm("This will cancel the job. Are you sure?") ? cancelOrDeleteJob(item.id) : ""}
-        // href={item.status === 'completed' ? `/api/v1/jobResult?id=${item.id}` : null}
-      >
-        {
-          item.status === 'rendering' ? <Halt />
-          : <Trash />
-        }
-      </Button>
-  }
-]
-
 class JobsTable extends Component {
-
   render() {
     return (
         <Box align="center" pad="large">
@@ -129,11 +52,95 @@ export default class ManageJobs extends Component {
       jobs: null
     };
 
+
+    this.fetchJobs();
+
+    this.columns = [
+      {
+        property: "key",
+        header: "#",
+        render: item => <Text>{item.key}</Text>
+      }, {
+        property: "artistName",
+        header: "Artist",
+        render: item => <Text weight="bold">{item.artistName}</Text>
+      },
+      {
+        property: "songName",
+        header: "Song"
+      },
+      {
+        property: "status",
+        header: "Status",
+        render: item => {
+          return <Text color={statusColourMap[item.status]}>{item.status}</Text>
+        }
+      },
+      {
+        property: "progress",
+        header: "Progress",
+        render: item => {
+          return <Text color={'status-unknown'}>{`${item.progress}%`}</Text>
+        }
+      },
+      {
+        property: "download",
+        header: "Download",
+        align: "center",
+        render: item =>
+          <Button
+            style={{
+              padding: '5px',
+              borderRadius: '5px'
+            }}
+            hoverIndicator={true}
+            as="a"
+            href={item.status === 'completed' ? `/api/v1/jobResult?id=${item.id}` : null}
+            disabled={item.status !== 'completed'}
+          >
+            <Download />
+          </Button>
+      },
+      {
+        property: "clean",
+        header: "Clean",
+        align: "center",
+        render: item =>
+          <Button
+            style={{
+              padding: '5px',
+              borderRadius: '5px'
+            }}
+            hoverIndicator={true}
+            as="a"
+            onClick={() => this.cancelOrDeleteJobHandler(item)}
+            // href={item.status === 'completed' ? `/api/v1/jobResult?id=${item.id}` : null}
+          >
+            {
+              item.status === 'rendering' ? <Halt />
+              : <Trash />
+            }
+          </Button>
+      }
+    ]
+
+  }
+
+  async cancelOrDeleteJobHandler(item){
+    if (!window.confirm("This will cancel the job. Are you sure?")) return;
+
+    let result = await cancelOrDeleteJob(item.id);
+
+    if (result.success) console.log(`Successfully deleted ${item.id}`)
+
+    this.fetchJobs();
+  }
+
+  fetchJobs(){
     getJobs({truncateBuffers: true}).then(result => this.setState({
       ...this.state,
       jobs: result.jobs
     }));
-
   }
 
   render(){
@@ -155,7 +162,7 @@ export default class ManageJobs extends Component {
               ...item.details,
               key: i
             }))}
-            columns={columns}
+            columns={this.columns}
           /></Fade> : <Text>Loading...</Text>
         }
 

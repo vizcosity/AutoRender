@@ -352,11 +352,16 @@ class JobQueue {
     let jobToRemove = this.getJobById(id);
     if (!jobToRemove) return false;
 
+    if (jobToRemove.status == 'rendering') {
+      this.log(`Attempting to remove job while render is in progress.`);
+    }
+
     // Remove from storage if written to disk.
     // CHECKPOINT: For some reason, the path is null here.
     if (jobToRemove.pathToSelf) {
-      log(`Removing job at path:`, jobToRemove.outputPath);
-      let jobDirectory = path.dirname(jobToRemove.outputPath);
+      // The job directory is located as the parent directory of the '.temp' folder used to contain the jobDetail json.
+      let jobDirectory = path.resolve(path.dirname(jobToRemove.pathToSelf), '../');
+      log(`Removing job at path:`, jobDirectory);
       this.log(`Removing job:`, id, `at path`, jobDirectory, `from disk.`);
       rmrf.sync(jobDirectory);
       this.log(`Removed`, jobDirectory, `from disk.`);

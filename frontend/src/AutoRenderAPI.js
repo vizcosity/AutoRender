@@ -76,7 +76,7 @@ const downloadJobResult = ops => {
 }
 
 const cancelOrDeleteJob = async id => {
-  fetch('/api/v1/job', {
+  return await fetch('/api/v1/job', {
     method: 'DELETE',
     body: JSON.stringify({
       id
