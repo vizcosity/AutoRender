@@ -125,8 +125,8 @@ const configureJobTemplate = ({
   }
 
   jobJson.onRenderProgress = ({renderProgress}) => {
-    if (renderProgressHandler) renderProgressHandler(renderProgress);
     log(projectName, `Render progress:`, renderProgress);
+    if (renderProgressHandler) renderProgressHandler(renderProgress);
   }
 
   // Add the action-encode postrender action, if specified.

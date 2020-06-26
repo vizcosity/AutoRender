@@ -220,6 +220,7 @@ class Job {
   }
 
   updateProgress(newProgress){
+    // log(`Setting render progress to:`, newProgress, `for job`, this.id);
     this.progress = newProgress;
   }
 
@@ -534,7 +535,7 @@ class JobWorker {
       autorender.render({
         projectName: job.details.projectName,
         songDetails: job.details,
-        renderProgressHandler: job.updateProgress
+        renderProgressHandler: params => job.updateProgress(params)
       }).then(result => {
 
         self.log(`Finished rendering`, job.id, `with result:`, result);
